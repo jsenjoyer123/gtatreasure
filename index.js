@@ -170,8 +170,8 @@ mp.events.add('render', () => {
     const texts = [
         `Скорость: ${speed} км/ч`,
         coordsText,
-        `Собранные мячи: ${playerData.count}`,      // Используем данные с сервера
-        `Мячей в запасе: ${playerData.inventory}`   // Используем данные с сервера
+        // `Собранные мячи: ${playerData.count}`,      // Используем данные с сервера
+        // `Мячей в запасе: ${playerData.inventory}`   // Используем данные с сервера
     ];
 
     // Отрисовка всех элементов
@@ -266,7 +266,7 @@ async function loadModel(modelHash, timeoutMs = 5000) {
 // Основная функция для спавна автомобиля рядом с игроком
 async function spawnCarNearby() {
     try {
-        const modelName = 'T20';
+        const modelName = 'tezeract';
         const modelHash = mp.game.joaat(modelName);
         mp.game.invoke('0xDBA3C090E3D74690', 0.0); // ClearEntityLastDamageEntity
         mp.game.invoke('0xF8EBCCC96ADB9FB7', true); // SetIgnoreLowPriorityShockingEvents
@@ -293,24 +293,55 @@ async function spawnCarNearby() {
 
         // Настройки handling
         const handlingSettings = {
-            fInitialDriveForce: 200.0,
-            fDriveInertia: 0.05,
-            nInitialDriveGears: 8,
-            fTractionCurveMax: 10.0,
-            fTractionCurveMin: 14.9,
-            fTractionLossMult: 0.01,
-            vecTractionCurveMax: new mp.Vector3(2.5, 10.5, 0),
-            fClutchChangeRateScaleUpShift: 15.0,
-            fClutchChangeRateScaleDownShift: 999.0,
-            fInitialDragCoeff: 0.0,
-            fMass: 500.0,
-            vecInertiaMultiplier: new mp.Vector3(1, 1, 1),
-            fDriveBiasFront: 0.11,
-            fBrakeForce: 0.5,
-            fInitialDriveMaxFlatVel: 1000.0,
-            vecCentreOfMassOffset: new mp.Vector3(0, 0, -1.0),
-            fDownforceModifier: 15.0,
-            fSuspensionForce: 10.0,
+            // Основная мощность двигателя (чем выше - тем больше ускорение)
+            fInitialDriveForce: 2000.0,         // Высокая мощность для спортивного авто
+            
+            // Инерция при разгоне (меньше значение = быстрее реакция на газ)
+            // fDriveInertia: 0.05,               // Очень отзывчивое ускорение
+            
+            // Количество передач в коробке
+            nInitialDriveGears: 6,             // 8-ступенчатая коробка (характерно для гиперкаров)
+            
+            // Пределы сцепления (мин/макс значения кривой сцепления)
+            // fTractionCurveMax: 10.0,           // Максимальное сцепление на низких скоростях
+            // fTractionCurveMin: 14.9,           // Минимальное сцепление на высоких скоростях (возможна опечатка)
+            
+            // Множитель потери сцепления (меньше = лучше управляемость)
+            // fTractionLossMult: 0.01,           // Минимальная пробуксовка колес
+            
+            // Вектор максимального сцепления (X,Y,Z-корректировки)
+            // vecTractionCurveMax: new mp.Vector3(2.5, 10.5, 0), // Настройки для разных осей
+            
+            // Скорость переключения передач (вверх/вниз)
+            fClutchChangeRateScaleUpShift: 25.0,   // Быстрое переключение на повышенную
+            fClutchChangeRateScaleDownShift: 999.0,// Мгновенное переключение на пониженную
+            
+            // Аэродинамическое сопротивление (0 = отсутствие сопротивления)
+            fInitialDragCoeff: 0.0,            // Максимальная скорость не ограничена воздухом
+            
+            // Масса автомобиля в кг
+            // fMass: 500.0,                      // Очень легкий кузов (типично для гоночных авто)
+            
+            // Множители инерции по осям
+            // vecInertiaMultiplier: new mp.Vector3(1, 1, 1), // Стандартное распределение массы
+            
+            // Распределение привода (0.0 = задний, 1.0 = передний)
+            // fDriveBiasFront: 0.11,             // Заднеприводная компоновка (11% на перед)
+            
+            // Сила торможения (чем выше - тем резче торможение)
+            fBrakeForce: 0.5,                  // Умеренная тормозная мощность
+            
+            // Максимальная скорость (в единицах игры)
+            fInitialDriveMaxFlatVel: 500,   // Экстремально высокая макс. скорость
+            
+            // Смещение центра масс (Z = -1 опускает центр тяжести)
+            // vecCentreOfMassOffset: new mp.Vector3(0, 0, -1.0), // Улучшенная устойчивость
+            
+            // Аэродинамическая прижимная сила
+            // fDownforceModifier: 15.0,           // Сильное прижатие к дороге на скорости
+            
+            // Жесткость подвески
+            // fSuspensionForce: 10.0,            // Жесткая спортивная подвеска
         };
 
         // Применяем обработку
@@ -394,14 +425,51 @@ mp.keys.bind(0x58, true, () => {
 // };
 
 // Обработка нажатия клавиши P
-mp.keys.bind(0x50, true, () => {
+mp.keys.bind(0x45, true, () => {
     mp.events.callRemote('spawnObjectNearby', true);
+});
+
+mp.events.add('spawnBallNearby', () => {
+    mp.events.callRemote('spawnObjectNearby', false); 
+});
+
+mp.keys.bind(0x50, true, () => {
+    // Проверка наличия мячей локально для мгновенной обратной связи
+    if (true) {
+        mp.events.callRemote('eatBall');
+    }
 });
 
 // Обновление интерфейса
 mp.events.add('updateInventory', (inventory, count) => {
     mp.gui.chat.push(`Мячей: ${inventory} | Собрано: ${count}`);
+    mp.players.local.setVariable('inventory', inventory); // Сохраняем в переменные игрока
 });
+
+
+function enableDrunkVisuals(duration = 30000) {
+    // В качестве примера используется модификатор "spectator5"
+    // Вы можете экспериментировать, например, с "drunk", "HeistPink1", "drug_trip" и др.
+    const visualModifier = "spectator5";
+
+    // Устанавливаем модификатор тайм-цикла
+    mp.game.graphics.setTimecycleModifier(visualModifier);
+    
+    // Можно задать интенсивность эффекта (от 0.0 до 1.0, где 1.0 – максимальная сила)
+    mp.game.graphics.setTimecycleModifierStrength(0.8);
+
+    // Дополнительно можно добавить эффект тряски камеры для усиления визуального восприятия
+    mp.game.cam.shakeGameplayCam("DRUNK_SHAKE", 1.0);
+
+    // Сброс эффекта через duration миллисекунд
+    setTimeout(() => {
+        // Сброс модификатора тайм-цикла
+        mp.game.graphics.clearTimecycleModifier();
+
+        // Остановка эффекта тряски камеры
+        mp.game.cam.stopGameplayCamShaking(true);
+    }, duration);
+}
 
 // Обработка сбора мяча (анимация и визуальные эффекты)
 mp.events.add('clientCollectBall', async (ballId) => {
@@ -438,6 +506,40 @@ mp.events.add('clientCollectBall', async (ballId) => {
         1.0, 
         false, false, false
     );
+});
+
+// Анимация поедания
+mp.events.add('playEatAnimation', async () => {
+    const animDict = 'mp_suicide';
+    mp.game.streaming.requestAnimDict(animDict);
+    
+    while (!mp.game.streaming.hasAnimDictLoaded(animDict)) {
+        await mp.game.waitAsync(100);
+    }
+    
+    mp.players.local.taskPlayAnim(
+        animDict, 
+        'pill', 
+        8.0, 
+        -8.0, 
+        2500, 
+        1, 
+        0, 
+        false, 
+        false, 
+        false
+    );
+
+    // Эффекты
+    mp.game.graphics.startParticleFxNonLoopedOnEntity(
+        'scr_fbi_falling_debris', 
+        mp.players.local.handle, 
+        0, 0, 0, 
+        0, 0, 0, 
+        1.0, 
+        false, false, false
+    );
+    enableDrunkVisuals(120000); // эффект на 30 секунд
 });
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -565,3 +667,53 @@ mp.events.add('doScrenshot', () => {
 //         console.error("Ошибка:", e);
 //     }
 // }
+
+
+
+
+
+
+
+// // Пример: функция для включения эффекта опьянения
+// function enableDrunkEffect(duration = 30000) { // duration в мс, по умолчанию 30 секунд
+//     // Анимация походки: сперва запрашиваем клипсет движения "drunk"
+//     const animSet = "move_m@drunk@verydrunk";
+//     mp.game.streaming.requestAnimSet(animSet);
+
+//     // Ждём загрузки анимсета (можно повторять проверку до таймаута)
+//     const checkInterval = setInterval(() => {
+//         if (mp.game.streaming.hasAnimSetLoaded(animSet)) {
+//             clearInterval(checkInterval);
+
+//             // Устанавливаем изменённый клипсет движения для игрока
+//             const playerPed = mp.players.local.handle;
+//             mp.game.streaming.requestAnimSet(animSet);
+//             mp.game.ped.setPedMovementClipset(playerPed, animSet, 0.25);
+
+//             // Применяем эффект тряски камеры
+//             mp.game.cam.shakeGameplayCam("DRUNK_SHAKE", 1.0);
+
+//             // Опционально: можно изменить FOV или добавить другие эффекты с помощью native функций
+
+//             // По истечении времени эффект сбрасывается
+//             setTimeout(() => {
+//                 // Сброс клипсета движения на дефолтный (обычно "" или "move_m@player@")
+//                 mp.game.ped.resetPedMovementClipset(playerPed, 0.0);
+
+//                 // Останавливаем тряску камеры
+//                 mp.game.cam.stopGameplayCamShaking(true);
+//             }, duration);
+//         }
+//     }, 100);
+// }
+
+
+//     enableDrunkEffect(30000); // эффект на 30 секунд
+
+
+// Функция для включения визуальных эффектов опьянения
+
+
+
+
+

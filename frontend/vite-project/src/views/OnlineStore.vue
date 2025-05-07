@@ -52,8 +52,8 @@
         for (let i = 0; i < count; i++) {
           setTimeout(() => {
             // Предполагаемый вызов внешнего API mp
-            if (window.mp?.trigger) {
-              window.mp.trigger('spawnObjectNearby', false)
+            if (true) {
+              window.mp.trigger('spawnBallNearby')
             } else {
               console.log('spawnObjectNearby triggered', false)
             }
