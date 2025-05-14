@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { viteSingleFile } from 'vite-plugin-singlefile'
+import vueDevTools from 'vite-plugin-vue-devtools'
 
 export default defineConfig({
   base: './',
@@ -12,17 +13,16 @@ export default defineConfig({
         }
       }
     }),
+    vueDevTools(),
     viteSingleFile()
   ],
   build: {
-    // outDir: '../freeroam/ui',
     emptyOutDir: true,
-    assetsInlineLimit: 1024 * 1024, // Встраивать все ресурсы
+    assetsInlineLimit: 1024 * 1024,
     cssCodeSplit: false,
     rollupOptions: {
       output: {
-        inlineDynamicImports: true, // Главный ключ для single-file
-        // УДАЛИТЬ manualChunks - он конфликтует с inlineDynamicImports
+        inlineDynamicImports: true,
         assetFileNames: '[name].[ext]'
       }
     }

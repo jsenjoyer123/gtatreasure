@@ -2,7 +2,7 @@
 mp.events.add('playerReady', () => {
     let modelName = 'mp_f_freemode_01';
     let modelHash = mp.game.joaat(modelName);
-    
+
     // Запрос модели
     mp.game.streaming.requestModel(modelHash);
     while (!mp.game.streaming.hasModelLoaded(modelHash)) {
@@ -158,31 +158,73 @@ mp.events.add('updateUI', (inventory, count) => {
 
 mp.events.add('render', () => {
     const player = mp.players.local;
-
-    // Скорость
-    const speed = Math.round(player.getSpeed() * 3.6);
     
-    // Координаты
+    // 1. Основной HUD (верхний центр)
+    const speed = Math.round(player.getSpeed() * 3.6);
     const pos = player.position;
-    const coordsText = `X: ${pos.x.toFixed(2)}  Y: ${pos.y.toFixed(2)}  Z: ${pos.z.toFixed(2)}`;
-
-    // Все элементы отображения
-    const texts = [
-        `Скорость: ${speed} км/ч`,
-        coordsText,
-        // `Собранные мячи: ${playerData.count}`,      // Используем данные с сервера
-        // `Мячей в запасе: ${playerData.inventory}`   // Используем данные с сервера
-    ];
-
-    // Отрисовка всех элементов
-    texts.forEach((text, index) => {
-        mp.game.graphics.drawText(text, [0.5, 0.1 + (0.05 * index)], {
+    
+    // Скорость и мячи
+    mp.game.graphics.drawText(
+        `Скорость: ${speed} км/ч | Мячи: ${playerData.count}`, 
+        [0.5, 0.03], 
+        {
             font: 4,
-            color: [255, 255, 255, 255],
+            color: [255, 255, 255, 220],
             scale: [0.5, 0.5],
             outline: true,
             centre: true
-        });
+        }
+    );
+
+    // Координаты
+    mp.game.graphics.drawText(
+        `X: ${pos.x.toFixed(1)} Y: ${pos.y.toFixed(1)} Z: ${pos.z.toFixed(1)}`,
+        [0.5, 0.075],
+        {
+            font: 4,
+            color: [200, 200, 200, 180],
+            scale: [0.4, 0.4],
+            outline: true,
+            centre: true
+        }
+    );
+
+    // 2. Блок управления (правее чем было)
+    const controlsConfig = {
+        baseX: 0.03,       // Базовый отступ для большинства элементов
+        specialX: 0.045,   // Увеличенный отступ для отдельных пунктов
+        startY: 0.4,
+        yStep: 0.045,
+        colors: {
+            header: [100, 200, 255, 220],
+            text: [220, 220, 220, 200]
+        }
+    };
+
+    const controls = [
+        // {text: "~b~Управление", offsetX: controlsConfig.baseX},
+        {text: "Управление", offsetX: controlsConfig.baseX},
+        // {text: "", offsetX: controlsConfig.baseX},
+        {text: "[M] - Телефон", offsetX: controlsConfig.baseX},
+        {text: "[X] - Взять мяч", offsetX: controlsConfig.baseX},
+        {text: "[P] - Использовать мяч", offsetX: controlsConfig.specialX}, // Специальный отступ
+        {text: "[BACKSPACE] - Закрыть", offsetX: controlsConfig.specialX}   // Специальный отступ
+    ];
+
+    controls.forEach((item, index) => {
+        const yPos = controlsConfig.startY + (index * controlsConfig.yStep);
+        const style = {
+            font: 4,
+            color: index < 1 ? controlsConfig.colors.header : controlsConfig.colors.text,
+            scale: [0.45, 0.45],
+            outline: true
+        };
+
+        mp.game.graphics.drawText(
+            item.text,
+            [item.offsetX, yPos], // Индивидуальный X для каждого элемента
+            style
+        );
     });
 });
 
@@ -266,7 +308,9 @@ async function loadModel(modelHash, timeoutMs = 5000) {
 // Основная функция для спавна автомобиля рядом с игроком
 async function spawnCarNearby() {
     try {
-        const modelName = 'tezeract';
+        // const modelName = 'tezeract';
+        const modelName = 'pfister811'
+        // const modelName = 'openwheel1'
         const modelHash = mp.game.joaat(modelName);
         mp.game.invoke('0xDBA3C090E3D74690', 0.0); // ClearEntityLastDamageEntity
         mp.game.invoke('0xF8EBCCC96ADB9FB7', true); // SetIgnoreLowPriorityShockingEvents
@@ -374,9 +418,9 @@ async function spawnCarNearby() {
 }
 
 // Вызов при нажатию клавиши (например, X)
-mp.keys.bind(0x58, true, () => {
-    spawnCarNearby();
-});
+// mp.keys.bind(0x58, true, () => {
+//     spawnCarNearby();
+// });
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -425,7 +469,7 @@ mp.keys.bind(0x58, true, () => {
 // };
 
 // Обработка нажатия клавиши P
-mp.keys.bind(0x45, true, () => {
+mp.keys.bind(0x58, true, () => {
     mp.events.callRemote('spawnObjectNearby', true);
 });
 

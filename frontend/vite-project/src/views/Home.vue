@@ -14,7 +14,7 @@
       </div>
       <div class="app-icon" @click="spawnMultipleBalls(5)">
         <div>🔵</div>
-        <span>Шар</span>
+        <span>Кнопка для разработчика</span>
       </div>
     </div>
   </template>

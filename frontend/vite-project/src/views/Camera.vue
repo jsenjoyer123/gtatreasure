@@ -3,7 +3,7 @@
     <video ref="cameraPreview" autoplay playsinline></video>
     <div class="camera-controls">
       <div class="control-btn switch-camera" @click="switchCamera">↻</div>
-      <div class="camera-button" @click="takePhoto">камера</div>
+      <div class="camera-button" @click="takePhoto"></div>
       <div class="control-btn gallery-btn" @click="openGallery">🖼️</div>
     </div>
   </div>
