@@ -4,9 +4,12 @@ const bcrypt = require('bcrypt');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 // Импорт маршрутов для работы с товарами
-const productsRoutes = require('./productsRoutes');
-const wholesaleProductsRoutes = require('./wholesaleProductsRoutes');
+const productsRoutes = require('./routes/productsRoutes');
+const wholesaleProductsRoutes = require('./routes/wholesaleProductsRoutes');
 require('dotenv').config();
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpecs = require('./swagger');
+
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -20,8 +23,10 @@ app.use(cors({
 // app.options('*', cors()) // Добавить эту строку перед остальными роутами
 // Middleware
 app.use(bodyParser.json());
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 app.use('/api', productsRoutes.router);
-app.use('/api/wholesale', wholesaleProductsRoutes);
+app.use('/api/wholesale', wholesaleProductsRoutes.router);
+
 
 // app.use(cors({
 //   origin: process.env.FRONTEND_URL || 'http://localhost:8080',
@@ -45,7 +50,7 @@ async function initializeDatabase() {
   try {
     await client.connect();
     console.log('✅ PostgreSQL подключен');
-    
+
     // Проверяем существование таблицы users
     const tableCheck = await client.query(`
       SELECT EXISTS (
@@ -53,7 +58,7 @@ async function initializeDatabase() {
         WHERE table_name = 'users'
       )
     `);
-    
+
     if (!tableCheck.rows[0].exists) {
       console.log('🔄 Создаем таблицу users...');
       await client.query(`
@@ -65,7 +70,7 @@ async function initializeDatabase() {
         )
       `);
       console.log('✅ Таблица users создана');
-      
+
       // Добавляем тестового пользователя
       const saltRounds = 10;
       const passwordHash = await bcrypt.hash('password', saltRounds);
@@ -75,7 +80,7 @@ async function initializeDatabase() {
       );
       console.log('✅ Тестовый пользователь создан');
     }
-    
+
   } catch (err) {
     console.error('❌ Ошибка инициализации БД:', err);
     process.exit(1);
@@ -99,10 +104,10 @@ app.post('/api/login', async (req, res) => {
   }
 
   const client = new Client(dbConfig);
-  
+
   try {
     await client.connect();
-    
+
     // Поиск пользователя
     const result = await client.query(
       'SELECT id, email, password_hash FROM users WHERE email = $1',
@@ -114,10 +119,10 @@ app.post('/api/login', async (req, res) => {
     }
 
     const user = result.rows[0];
-    
+
     // Проверка пароля
     const isMatch = await bcrypt.compare(password, user.password_hash);
-    
+
     if (!isMatch) {
       return res.status(401).json({ message: 'Неверные учетные данные' });
     }
@@ -169,10 +174,10 @@ app.post('/api/register', async (req, res) => {
   }
 
   const client = new Client(dbConfig);
-  
+
   try {
     await client.connect();
-    
+
     // Проверка существующего пользователя
     const existingUser = await client.query(
       'SELECT id FROM users WHERE email = $1',
