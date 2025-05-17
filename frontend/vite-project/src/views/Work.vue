@@ -4,10 +4,10 @@
       <h2>Каталог товаров</h2>
       <div class="category-filter">
         <button
-          v-for="category in categories"
-          :key="category"
-          @click="changeCategory(category)"
-          :class="{ active: selectedCategory === category }"
+            v-for="category in categories"
+            :key="category"
+            @click="changeCategory(category)"
+            :class="{ active: selectedCategory === category }"
         >
           {{ category }}
         </button>
@@ -15,10 +15,10 @@
     </div>
 
     <div class="product-grid">
-      <div 
-        class="product-card"
-        v-for="product in filteredProducts"
-        :key="product.tempId"
+      <div
+          class="product-card"
+          v-for="product in filteredProducts"
+          :key="product.tempId"
       >
         <div class="product-image">
           <img :src="product.image" :alt="product.name">
@@ -26,19 +26,19 @@
         <div class="product-info">
           <h3>{{ product.name }}</h3>
           <p class="description">{{ product.description }}</p>
-          
+
           <div class="specs-row">
-            <span class="weight">{{ product.weight.toLocaleString() }} г</span>
-            <span class="district">Р-н {{ product.district }}</span>
+            <span class="weight">⚖️ {{ product.weight.toLocaleString() }} г</span>
+            <span class="district">📍 Р-н {{ product.district }}</span>
           </div>
 
           <div class="price-row">
             <span class="price">₽ {{ product.price.toLocaleString() }}</span>
-            <button 
-              class="buy-btn"
-              @click="addToCart(product)"
+            <button
+                class="buy-btn"
+                @click="buyProduct(product)"
             >
-              В корзину
+              Купить
             </button>
           </div>
         </div>
@@ -54,142 +54,9 @@ export default {
     return {
       selectedCategory: 'Электроника',
       categories: ['Электроника', 'Мебель', 'Одежда', 'Книги', 'Спорт'],
-      products: [
-  // Электроника (10 товаров)
-  { 
-    name: 'Игровой ноутбук ASUS ROG',
-    price: 149990,
-    weight: 2500,
-    district: 'Центральный',
-    category: 'Электроника',
-    description: 'RTX 4080, 32GB DDR5, 1TB SSD, 17.3" 240Hz'
-  },
-  {
-    name: 'Смартфон iPhone 15 Pro',
-    price: 99990,
-    weight: 187,
-    district: 'Северный',
-    category: 'Электроника', 
-    description: '6.1" OLED, A17 Bionic, 256GB'
-  },
-  {
-    name: 'Умные часы Galaxy Watch 6',
-    price: 29990,
-    weight: 42,
-    district: 'Западный',
-    category: 'Электроника',
-    description: 'AMOLED экран, мониторинг здоровья'
-  },
-  {
-    name: 'Беспроводные наушники Sony',
-    price: 21990,
-    weight: 250,
-    district: 'Восточный',
-    category: 'Электроника',
-    description: 'Шумоподавление, 30 часов работы'
-  },
-  {
-    name: 'Электросамокат Xiaomi Pro',
-    price: 45990,
-    weight: 14200,
-    district: 'Южный',
-    category: 'Электроника',
-    description: 'Запас хода 45 км, скорость 25 км/ч'
-  },
-
-  // Мебель (8 товаров)
-  {
-    name: 'Угловой диван "Милан"',
-    price: 89990,
-    weight: 85000,
-    district: 'Центральный',
-    category: 'Мебель',
-    description: 'Кожаная обивка, модульная система'
-  },
-  {
-    name: 'Рабочий стол "Modern"',
-    price: 23490,
-    weight: 15000,
-    district: 'Северный',
-    category: 'Мебель',
-    description: 'Столешница из натурального дерева'
-  },
-  {
-    name: 'Книжный шкаф "Винтаж"',
-    price: 32990,
-    weight: 32000,
-    district: 'Западный',
-    category: 'Мебель',
-    description: '4 секции, витражные стекла'
-  },
-
-  // Одежда (7 товаров)
-  {
-    name: 'Зимняя куртка Canada Goose',
-    price: 89990,
-    weight: 1300,
-    district: 'Восточный',
-    category: 'Одежда',
-    description: 'Пуховая, ветрозащитная, размеры 48-56'
-  },
-  {
-    name: 'Кожаная куртка-косуха',
-    price: 45990,
-    weight: 850,
-    district: 'Южный',
-    category: 'Одежда',
-    description: 'Натуральная кожа, размеры M-XXL'
-  },
-  {
-    name: 'Футболка хлопковая Basic',
-    price: 2990,
-    weight: 220,
-    district: 'Центральный',
-    category: 'Одежда',
-    description: '10 цветов, все размеры'
-  },
-
-  // Книги (5 товаров)
-  {
-    name: 'JavaScript. Полное руководство',
-    price: 4590,
-    weight: 850,
-    district: 'Северный',
-    category: 'Книги',
-    description: '7-е издание Дэвида Флэнагана'
-  },
-  {
-    name: 'Чистая архитектура',
-    price: 3290,
-    weight: 620,
-    district: 'Западный',
-    category: 'Книги',
-    description: 'Роберт Мартин, 2022 год издания'
-  },
-
-  // Спорт (5 товаров)
-  {
-    name: 'Беговая дорожка ProForm',
-    price: 129990,
-    weight: 68000,
-    district: 'Восточный',
-    category: 'Спорт',
-    description: 'Мощность 3.5 л.с., скорость до 20 км/ч'
-  },
-  {
-    name: 'Гантели разборные 50 кг',
-    price: 8990,
-    weight: 25000,
-    district: 'Южный',
-    category: 'Спорт',
-    description: 'Резиновое покрытие, 6 дисков'
-  }
-].map((p, index) => ({
-  ...p,
-  tempId: `temp-${Date.now()}-${index}`,
-  serverId: null,
-  image: this.generateImageUrl(p.category, index)
-}))
+      products: [],
+      isLoading: false,
+      error: null
     }
   },
   computed: {
@@ -199,19 +66,46 @@ export default {
   },
   methods: {
     async loadProducts() {
+      this.isLoading = true;
+      this.error = null;
+
       try {
-        const response = await fetch('/api/products')
-        const serverProducts = await response.json()
-        
-        this.products = this.products.map(localProduct => {
-          const serverData = serverProducts.find(sp => sp.tempId === localProduct.tempId)
-          return serverData ? { ...localProduct, ...serverData } : localProduct
-        })
+        const baseUrl = 'http://localhost:3000';
+        // Кодируем категорию для URL
+        const encodedCategory = encodeURIComponent(this.selectedCategory);
+        const url = `${baseUrl}/api/products/category/${encodedCategory}`;
+
+        console.log('Начало загрузки данных');
+        console.log('URL запроса:', url);
+
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          // Убираем credentials, так как они не нужны для получения товаров
+          // credentials: 'include'
+        });
+
+        if (!response.ok) {
+          const text = await response.text();
+          console.error('Ошибка ответа:', text);
+          throw new Error(`Ошибка HTTP: ${response.status}`);
+        }
+
+        const serverProducts = await response.json();
+        console.log('Полученные данные:', serverProducts);
+
+        this.products = serverProducts;
+
       } catch (error) {
-        console.error('Ошибка загрузки:', error)
+        console.error('Подробная ошибка:', error);
+        this.error = `Не удалось загрузить товары: ${error.message}`;
+      } finally {
+        this.isLoading = false;
       }
     },
-
     generateImageUrl(category, index) {
       const tags = {
         'Электроника': 'electronics',
@@ -223,20 +117,74 @@ export default {
       return `https://loremflickr.com/400/300/${tags[category]}?lock=${index}`
     },
 
-    changeCategory(category) {
-      this.selectedCategory = category
+    async changeCategory(category) {
+      this.selectedCategory = category;
+      // При смене категории загружаем соответствующие товары
+      await this.loadProducts();
     },
 
-    addToCart(product) {
-      this.$emit('add-to-cart', {
-        tempId: product.tempId,
-        serverId: product.serverId,
-        ...product
-      })
+    async buyProduct(product) {
+      try {
+        // Показываем подтверждение покупки
+        if (!confirm(`Подтвердите покупку товара "${product.name}" за ${product.price.toLocaleString()} ₽`)) {
+          return;
+        }
+
+        // Получаем ID пользователя из локального хранилища (если авторизован)
+        const userId = localStorage.getItem('userId');
+
+        // Добавим абсолютный URL для бэкенда
+        const baseUrl = 'http://localhost:3000'; // URL вашего бэкенд-сервера
+
+        // Запрос к API для обработки покупки
+        const response = await fetch(`${baseUrl}/api/purchase`, {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            productId: product.serverId || product.tempId,
+            quantity: 1,
+            userId: userId // Передаем ID пользователя, если он авторизован
+          })
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Ответ сервера:', errorText);
+          throw new Error('Ошибка при выполнении покупки');
+        }
+
+        const result = await response.json();
+
+        // Показываем уведомление об успешной покупке
+        alert(`Спасибо за покупку! Товар "${product.name}" успешно оплачен.\nНомер заказа: ${result.purchaseId}`);
+
+        // Отправляем событие о успешной покупке
+        this.$emit('purchase-completed', {
+          product,
+          purchaseId: result.purchaseId
+        });
+
+      } catch (error) {
+        console.error('Ошибка при покупке:', error);
+        alert(`Произошла ошибка при оформлении покупки: ${error.message || 'Пожалуйста, попробуйте позже.'}`);
+      }
     }
   },
-  mounted() {
-    this.loadProducts()
+  async mounted() {
+    // Загружаем товары при монтировании компонента
+    await this.loadProducts();
+  },
+  watch: {
+    // Если на странице товаров нет, это может означать, что нужно обновить список
+    filteredProducts(newValue) {
+      if (newValue.length === 0 && !this.isLoading) {
+        this.loadProducts();
+      }
+    }
   }
 }
 </script>
@@ -280,8 +228,8 @@ h2 {
 }
 
 .category-filter button.active {
-  background: #27ae60;
-  border-color: #27ae60;
+  background: #007aff;
+  border-color: #007aff;
   color: white;
 }
 
@@ -362,11 +310,11 @@ h2 {
 .price {
   font-size: 1.3em;
   font-weight: 700;
-  color: #27ae60;
+  color: #007aff;
 }
 
 .buy-btn {
-  background: #27ae60;
+  background: #007aff;
   color: white;
   border: none;
   padding: 8px 20px;
@@ -396,7 +344,7 @@ h2 {
   .product-grid {
     grid-template-columns: repeat(3, 1fr);
   }
-  
+
   .product-image {
     height: 200px;
   }
@@ -412,7 +360,7 @@ h2 {
   .product-grid {
     grid-template-columns: 1fr;
   }
-  
+
   h2 {
     font-size: 2em;
   }
@@ -422,11 +370,11 @@ h2 {
   .product-info {
     padding: 15px;
   }
-  
+
   .price {
     font-size: 1.2em;
   }
-  
+
   .buy-btn {
     padding: 7px 18px;
   }

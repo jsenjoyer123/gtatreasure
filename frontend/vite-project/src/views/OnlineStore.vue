@@ -13,26 +13,26 @@
             {{ category }}
           </button>
         </div>
-        <div class="cart-indicator" @click="showCart = !showCart">
-          🛒 {{ cartItems.length }}
-        </div>
+<!--        <div class="cart-indicator" @click="showCart = !showCart">-->
+<!--           {{ cartItems.length }}-->
+<!--        </div>-->
       </div>
     </div>
 
     <div class="product-grid">
-      <div 
+      <div
         class="product-card"
         v-for="product in filteredProducts"
         :key="product.id"
       >
-        <img 
-          :src="product.image" 
+        <img
+          :src="product.image"
           :alt="product.name"
           class="product-image"
         />
         <h3 class="product-title">{{ product.name }}</h3>
         <p class="description">{{ product.description }}</p>
-        
+
         <div class="product-details">
           <p>⚖️ {{ product.weight.toLocaleString() }} г</p>
           <p>📍 Р-н {{ product.district }}</p>
@@ -41,51 +41,51 @@
 
         <div class="price-row">
           <span class="price">₽{{ product.price.toLocaleString() }}</span>
-          <button 
-            class="order-btn"
-            @click="addToCart(product)"
+          <button
+              class="order-btn"
+              @click="buyNow(product)"
           >
-            В корзину
+            Купить
           </button>
         </div>
       </div>
     </div>
 
     <!-- Корзина -->
-    <div v-if="showCart" class="cart-overlay">
-      <div class="cart-content">
-        <h3>Ваша корзина</h3>
-        
-        <div 
-          v-for="item in cartItems" 
-          :key="item.id" 
-          class="cart-item"
-        >
-          <img 
-            :src="item.image" 
-            :alt="item.name"
-            class="cart-item-image"
-          />
-          <div class="cart-item-info">
-            <p class="cart-item-title">{{ item.name }}</p>
-            <p>Количество: {{ item.quantity }}</p>
-          </div>
-          <button 
-            class="remove-btn"
-            @click="removeFromCart(item.id)"
-          >
-            ×
-          </button>
-        </div>
-        
-        <button 
-          class="checkout-btn" 
-          @click="checkout"
-        >
-          Оформить заказ
-        </button>
-      </div>
-    </div>
+<!--    <div v-if="showCart" class="cart-overlay">-->
+<!--      <div class="cart-content">-->
+<!--        <h3>Ваша корзина</h3>-->
+
+<!--        <div-->
+<!--          v-for="item in cartItems"-->
+<!--          :key="item.id"-->
+<!--          class="cart-item"-->
+<!--        >-->
+<!--          <img-->
+<!--            :src="item.image"-->
+<!--            :alt="item.name"-->
+<!--            class="cart-item-image"-->
+<!--          />-->
+<!--          <div class="cart-item-info">-->
+<!--            <p class="cart-item-title">{{ item.name }}</p>-->
+<!--            <p>Количество: {{ item.quantity }}</p>-->
+<!--          </div>-->
+<!--          <button-->
+<!--            class="remove-btn"-->
+<!--            @click="removeFromCart(item.id)"-->
+<!--          >-->
+<!--            ×-->
+<!--          </button>-->
+<!--        </div>-->
+
+<!--        <button-->
+<!--          class="checkout-btn"-->
+<!--          @click="checkout"-->
+<!--        >-->
+<!--          Оформить заказ-->
+<!--        </button>-->
+<!--      </div>-->
+<!--    </div>-->
   </div>
 </template>
 
@@ -100,7 +100,7 @@ export default {
       cartItems: [],
       products: [
   // Электроника
-  { 
+  {
     name: 'Игровой ноутбук ASUS ROG',
     price: 149990,
     weight: 2500,
@@ -276,7 +276,7 @@ export default {
         // Пример запроса к API
         const response = await fetch('/api/products')
         const serverProducts = await response.json()
-        
+
         // Синхронизация с серверными данными
         this.products = this.products.map(localProduct => {
           const serverData = serverProducts.find(sp => sp.tempId === localProduct.tempId)
@@ -291,15 +291,31 @@ export default {
       this.selectedCategory = category
     },
 
-    addToCart(product) {
-      const existingItem = this.cartItems.find(item => item.tempId === product.tempId)
-      if (existingItem) {
-        existingItem.quantity++
-      } else {
-        this.cartItems.push({
-          ...product,
-          quantity: 1
+    async buyNow(product) {
+      try {
+        // Формируем данные для заказа одного товара
+        const orderData = {
+          items: [{
+            productId: product.serverId,
+            quantity: 1
+          }]
+        }
+
+        // Отправляем запрос на сервер
+        const response = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orderData)
         })
+
+        if (!response.ok) {
+          throw new Error('Ошибка при оформлении заказа')
+        }
+
+        alert('Товар успешно куплен!')
+      } catch (error) {
+        console.error('Ошибка при покупке:', error)
+        alert('Произошла ошибка при оформлении заказа')
       }
     },
 
@@ -570,11 +586,11 @@ h2 {
   .product-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .category-filter {
     gap: 10px;
   }
-  
+
   .category-filter button {
     padding: 10px 20px;
     font-size: 0.9em;
@@ -585,7 +601,7 @@ h2 {
   h2 {
     font-size: 1.8em;
   }
-  
+
   .product-details {
     grid-template-columns: 1fr;
   }

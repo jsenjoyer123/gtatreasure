@@ -47,27 +47,32 @@ h2 {
   flex-direction: column;
   gap: 18px;
   margin-top: 40px;
-  max-width: 400px;
+  max-width: 700px;           /* Увеличиваем max-width */
   margin-left: auto;
   margin-right: auto;
-  width: 100%; /* Добавлено */
-  padding: 0 20px; /* Добавлено */
-  box-sizing: border-box; /* Добавлено */
+  width: 100%;
+  padding: 0 20px;
+  box-sizing: border-box;
 }
+
 
 /* Общие стили для всех типов кнопок */
 .link-button {
   background: linear-gradient(135deg, #007AFF 0%, #0040FF 100%);
   color: white;
-  padding: 20px 24px;
+  padding: 24px 32px;         /* Побольше отступов */
   border-radius: 14px;
-  font-size: 17px;
+  font-size: 20px;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 16px;
   width: 100%;
+  min-width: 320px;           /* Увеличена минимальная ширина */
+  max-width: 600px;           /* Увеличена максимальная ширина */
+  margin-left: auto;
+  margin-right: auto;
   box-shadow: 0 4px 6px rgba(0,0,0,0.08);
   border: none;
   outline: none;
@@ -75,11 +80,11 @@ h2 {
   text-decoration: none;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   line-height: 1.5;
-  min-height: 60px;
+  min-height: 70px;
   position: relative;
   overflow: hidden;
   backface-visibility: hidden;
-  box-sizing: border-box; /* Добавлено */
+  box-sizing: border-box;
 }
 
 /* Остальные стили без изменений */
