@@ -39,7 +39,7 @@
 
       <div class="auth-links">
         <router-link to="/register">Создать аккаунт</router-link>
-        <router-link to="/forgot-password">Забыли пароль?</router-link>
+<!--        <router-link to="/forgot-password">Забыли пароль?</router-link>-->
       </div>
     </div>
   </div>

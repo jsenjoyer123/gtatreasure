@@ -3,13 +3,25 @@ const { Client } = require('pg');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+// Импорт маршрутов для работы с товарами
+const productsRoutes = require('./productsRoutes');
+const wholesaleProductsRoutes = require('./wholesaleProductsRoutes');
 require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 3000;
 
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],  // добавляем OPTIONS
+  allowedHeaders: ['Content-Type', 'Accept']  // явно указываем разрешенные заголовки
+}));
+// app.options('*', cors()) // Добавить эту строку перед остальными роутами
 // Middleware
 app.use(bodyParser.json());
+app.use('/api', productsRoutes.router);
+app.use('/api/wholesale', wholesaleProductsRoutes);
 
 // app.use(cors({
 //   origin: process.env.FRONTEND_URL || 'http://localhost:8080',
@@ -17,11 +29,7 @@ app.use(bodyParser.json());
 // }));
 
 // В коде сервера добавьте:
-app.use(cors({
-  origin: 'http://localhost:5173',
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE']
-}));
+
 // Конфигурация PostgreSQL
 const dbConfig = {
   host: process.env.DB_HOST,
