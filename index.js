@@ -1,4 +1,32 @@
 //СПАВН ИГРОКА
+// Переменная для отслеживания, загружен ли уже браузер регистрации
+let authBrowserLoaded = false;
+
+// В начале скрипта определим функцию для открытия окна регистрации
+function openAuthBrowser() {
+    if (!authBrowserLoaded) {
+        // Закрываем любой открытый смартфон
+        if (smartphoneBrowser) {
+            smartphoneBrowser.destroy();
+            smartphoneBrowser = null;
+        }
+
+        // Создаем браузер с прямой ссылкой на страницу регистрации
+        smartphoneBrowser = mp.browsers.new('http://localhost:5173/register');
+
+        // Передаем ID игрока в браузер
+        const playerId = mp.players.local.remoteId;
+        smartphoneBrowser.execute(`window.ragePlayerId = ${playerId};`);
+
+        // Показываем курсор для взаимодействия с формой
+        mp.gui.cursor.visible = true;
+
+        // Отмечаем, что браузер загружен
+        authBrowserLoaded = true;
+    }
+}
+
+// Изменение обработчика события playerReady
 mp.events.add('playerReady', () => {
     let modelName = 'mp_f_freemode_01';
     let modelHash = mp.game.joaat(modelName);
@@ -12,10 +40,44 @@ mp.events.add('playerReady', () => {
     mp.players.local.model = modelHash;
     mp.players.local.position = new mp.Vector3(-1069, -3427, 14);
 
+    // Открываем окно регистрации
+    openAuthBrowser();
+
+    // Остальная логика спавна
     createFollowingWomen(10);
 });
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Функция для проверки авторизации и скрытия браузера, если пользователь авторизован
+function checkAuthStatus() {
+    if (smartphoneBrowser) {
+        smartphoneBrowser.execute(`
+            const user = localStorage.getItem('user');
+            if (user) {
+                window.mp.trigger('userAlreadyLoggedIn', user);
+            }
+        `);
+    }
+}
 
+// Обработчик для случая, когда пользователь уже авторизован
+mp.events.add('userAlreadyLoggedIn', (userData) => {
+    // Закрываем браузер авторизации, если пользователь уже вошел
+    if (smartphoneBrowser) {
+        smartphoneBrowser.destroy();
+        smartphoneBrowser = null;
+        mp.gui.cursor.visible = false;
+    }
+
+    // Можно загрузить данные пользователя из переданного JSON
+    try {
+        const userObj = JSON.parse(userData);
+        mp.gui.chat.push(`Добро пожаловать, ${userObj.email}!`);
+
+        // Тут можно добавить дополнительную логику для уже авторизованных пользователей
+    } catch (e) {
+        console.error("Ошибка при парсинге данных пользователя:", e);
+    }
+});
 
 
 
@@ -629,24 +691,88 @@ let smartphoneBrowser = null;
 function openSmartphone() {
     if (!smartphoneBrowser) {
         smartphoneBrowser = mp.browsers.new('http://localhost:5173/');
+
+        // Передаем ID игрока в браузер при открытии
+        const playerId = mp.players.local.remoteId;
+        smartphoneBrowser.execute(`window.ragePlayerId = ${playerId};`);
     }
     mp.gui.cursor.visible = true;
 }
 
+
 function closeSmartphone() {
-    if (smartphoneBrowser) {
+    // Проверяем, является ли текущий браузер окном авторизации
+    if (smartphoneBrowser && authBrowserLoaded) {
+        // Проверяем, авторизован ли пользователь перед закрытием
+        smartphoneBrowser.execute(`
+            const user = localStorage.getItem('user');
+            if (user) {
+                window.mp.trigger('closeAuthBrowser', true); // true - авторизован
+            } else {
+                window.mp.trigger('closeAuthBrowser', false); // false - не авторизован
+            }
+        `);
+    } else if (smartphoneBrowser) {
+        // Если это обычный смартфон (не окно авторизации)
         smartphoneBrowser.destroy();
         smartphoneBrowser = null;
+        mp.gui.cursor.visible = false;
     }
-    mp.gui.cursor.visible = false;
 }
+
+// Обработчик закрытия браузера авторизации
+mp.events.add('closeAuthBrowser', (isLoggedIn) => {
+    if (smartphoneBrowser) {
+        // Если пользователь авторизован, просто закрываем браузер
+        if (isLoggedIn) {
+            smartphoneBrowser.destroy();
+            smartphoneBrowser = null;
+            mp.gui.cursor.visible = false;
+            authBrowserLoaded = false;
+        } else {
+            // Если не авторизован, предупреждаем
+            mp.gui.chat.push("Необходимо войти в аккаунт или зарегистрироваться!");
+        }
+    }
+});
+
+// Обработчик закрытия браузера авторизации
+mp.events.add('closeAuthBrowser', (isLoggedIn) => {
+    if (smartphoneBrowser) {
+        // Если пользователь авторизован, просто закрываем браузер
+        if (isLoggedIn) {
+            smartphoneBrowser.destroy();
+            smartphoneBrowser = null;
+            mp.gui.cursor.visible = false;
+            authBrowserLoaded = false;
+        } else {
+            // Если не авторизован, предупреждаем
+            mp.gui.chat.push("Необходимо войти в аккаунт или зарегистрироваться!");
+        }
+    }
+});
 
 mp.keys.bind(0x4D, true, () => { // M
     openSmartphone();
 });
 
+// Обновляем обработчик Backspace, чтобы не закрывать окно авторизации,
+// если пользователь еще не вошел
 mp.keys.bind(0x08, true, () => { // Backspace
-    closeSmartphone();
+    // Если открыт браузер авторизации и пользователь не авторизован, не закрываем его
+    if (smartphoneBrowser && authBrowserLoaded) {
+        smartphoneBrowser.execute(`
+            const user = localStorage.getItem('user');
+            if (user) {
+                window.mp.trigger('closeAuthBrowser', true);
+            } else {
+                window.mp.trigger('closeAuthBrowser', false);
+            }
+        `);
+    } else {
+        // Обычное закрытие смартфона
+        closeSmartphone();
+    }
 });
 
 
@@ -756,8 +882,41 @@ mp.events.add('doScrenshot', () => {
 
 
 // Функция для включения визуальных эффектов опьянения
+// В клиентской части RAGE MP добавьте следующий код:
 
 
 
+// Обновленные обработчики событий успешной авторизации/регистрации
+mp.events.add('loginSuccess', (userData) => {
+    // Сохраняем данные в локальное хранилище браузера
+    if (smartphoneBrowser) {
+        smartphoneBrowser.execute(`
+            localStorage.setItem('user', JSON.stringify(${JSON.stringify(userData)}));
+            if (window.onLoginSuccess) window.onLoginSuccess();
+        `);
 
+        // Закрываем браузер авторизации
+        setTimeout(() => {
+            if (smartphoneBrowser) {
+                smartphoneBrowser.destroy();
+                smartphoneBrowser = null;
+                mp.gui.cursor.visible = false;
+                authBrowserLoaded = false;
+            }
+            mp.gui.chat.push('Вы успешно авторизовались!');
+        }, 1500); // Небольшая задержка, чтобы пользователь увидел сообщение об успехе
+    }
+});
 
+mp.events.add('registerSuccess', () => {
+    // После успешной регистрации перенаправляем на страницу входа
+    if (smartphoneBrowser) {
+        smartphoneBrowser.execute(`
+            if (window.onRegisterSuccess) window.onRegisterSuccess();
+            // Перенаправляем на страницу входа
+            window.location.href = '/auth';
+        `);
+
+        mp.gui.chat.push('Регистрация успешна! Теперь вы можете войти в аккаунт.');
+    }
+});

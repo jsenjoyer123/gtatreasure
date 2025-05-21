@@ -401,10 +401,10 @@ mp.events.add("showSmartphone", () => {
 });
 
 // Обработчики для второго смартфона
-mp.events.add("showSecondSmartphone", () => {
-    mp.gui.execute(`window.location = "package://freeroam/ui/secondary.html";`);
-    mp.gui.cursor.visible = true;
-});
+// mp.events.add("showSecondSmartphone", () => {
+//     mp.gui.execute(`window.location = "package://freeroam/ui/secondary.html";`);
+//     mp.gui.cursor.visible = true;
+// });
 
 // Общий обработчик закрытия для обоих смартфонов
 mp.events.add("hideSmartphone", () => {
