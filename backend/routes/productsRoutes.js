@@ -20,111 +20,92 @@ async function initializeProductsDatabase() {
 
         // Проверяем существование таблицы products
         const tableCheck = await client.query(`
-      SELECT EXISTS (
-        SELECT FROM information_schema.tables 
-        WHERE table_name = 'products'
-      )
-    `);
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables
+                WHERE table_name = 'products'
+            )
+        `);
 
         if (!tableCheck.rows[0].exists) {
             console.log('🔄 Создаем таблицу products...');
             await client.query(`
-        CREATE TABLE products (
-          id SERIAL PRIMARY KEY,
-          name VARCHAR(255) NOT NULL,
-          price INTEGER NOT NULL,
-          weight INTEGER NOT NULL,
-          district VARCHAR(100) NOT NULL,
-          category VARCHAR(100) NOT NULL,
-          description TEXT,
-          image VARCHAR(255),
-          temp_id VARCHAR(100) UNIQUE,
-          created_at TIMESTAMP DEFAULT NOW()
-        )
-      `);
+                CREATE TABLE products (
+                                          id SERIAL PRIMARY KEY,
+                                          name VARCHAR(255) NOT NULL,
+                                          price INTEGER NOT NULL,
+                                          weight INTEGER NOT NULL,
+                                          district VARCHAR(100) NOT NULL,
+                                          category VARCHAR(100) NOT NULL,
+                                          description TEXT,
+                                          image VARCHAR(255),
+                                          temp_id VARCHAR(100) UNIQUE,
+                                          created_at TIMESTAMP DEFAULT NOW()
+                )
+            `);
             console.log('✅ Таблица products создана');
-
-            // Создаем таблицу для покупок
-            const purchaseTableCheck = await client.query(`
-        SELECT EXISTS (
-          SELECT FROM information_schema.tables 
-          WHERE table_name = 'purchases'
-        )
-      `);
-
-            if (!purchaseTableCheck.rows[0].exists) {
-                await client.query(`
-          CREATE TABLE purchases (
-            id SERIAL PRIMARY KEY,
-            product_id INTEGER REFERENCES products(id),
-            user_id INTEGER REFERENCES users(id),
-            quantity INTEGER NOT NULL DEFAULT 1,
-            total_price INTEGER NOT NULL,
-            status VARCHAR(50) DEFAULT 'completed',
-            created_at TIMESTAMP DEFAULT NOW()
-          )
-        `);
-                console.log('✅ Таблица purchases создана');
-            }
-
-            // Добавляем тестовые данные товаров
-            const products = [
-                {
-                    name: 'Игровой ноутбук ASUS ROG',
-                    price: 149990,
-                    weight: 2500,
-                    district: 'Центральный',
-                    category: 'Электроника',
-                    description: 'RTX 4080, 32GB DDR5, 1TB SSD, 17.3" 240Hz',
-                    temp_id: `temp-${Date.now()}-1`,
-                    image: 'https://loremflickr.com/400/300/electronics?lock=1'
-                },
-                {
-                    name: 'Смартфон iPhone 15 Pro',
-                    price: 99990,
-                    weight: 187,
-                    district: 'Северный',
-                    category: 'Электроника',
-                    description: '6.1" OLED, A17 Bionic, 256GB',
-                    temp_id: `temp-${Date.now()}-2`,
-                    image: 'https://loremflickr.com/400/300/electronics?lock=2'
-                },
-                {
-                    name: 'Угловой диван "Милан"',
-                    price: 89990,
-                    weight: 85000,
-                    district: 'Центральный',
-                    category: 'Мебель',
-                    description: 'Кожаная обивка, модульная система',
-                    temp_id: `temp-${Date.now()}-3`,
-                    image: 'https://loremflickr.com/400/300/furniture?lock=1'
-                }
-            ];
-
-            for (const product of products) {
-                await client.query(`
-          INSERT INTO products (name, price, weight, district, category, description, temp_id, image)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        `, [
-                    product.name,
-                    product.price,
-                    product.weight,
-                    product.district,
-                    product.category,
-                    product.description,
-                    product.temp_id,
-                    product.image
-                ]);
-            }
-            console.log('✅ Добавлены тестовые товары');
         }
+
+        // Очищаем существующие данные
+        await client.query('TRUNCATE TABLE products RESTART IDENTITY CASCADE');
+        console.log('🔄 Таблица products очищена');
+
+        // Добавляем тестовые данные товаров
+        const products = [
+            {
+                name: 'Смартфон Vivo',
+                price: 149990,
+                weight: 2500,
+                district: 'Центральный',
+                category: 'Электроника',
+                description: 'RTX 4080, 32GB DDR5, 1TB SSD, 17.3" 240Hz',
+                temp_id: `temp-${Date.now()}-1`,
+                image: 'https://loremflickr.com/400/300/electronics?lock=1'
+            },
+            {
+                name: 'Смартфон Oppo',
+                price: 99990,
+                weight: 187,
+                district: 'Северный',
+                category: 'Электроника',
+                description: '6.1" OLED, A17 Bionic, 256GB',
+                temp_id: `temp-${Date.now()}-2`,
+                image: 'https://loremflickr.com/400/300/electronics?lock=2'
+            },
+            {
+                name: 'Смартфон Vivo',
+                price: 89990,
+                weight: 85000,
+                district: 'Центральный',
+                category: 'Мебель',
+                description: 'Кожаная обивка, модульная система',
+                temp_id: `temp-${Date.now()}-3`,
+                image: 'https://loremflickr.com/400/300/furniture?lock=1'
+            }
+        ];
+
+        for (const product of products) {
+            await client.query(`
+                INSERT INTO products (name, price, weight, district, category, description, temp_id, image)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            `, [
+                product.name,
+                product.price,
+                product.weight,
+                product.district,
+                product.category,
+                product.description,
+                product.temp_id,
+                product.image
+            ]);
+        }
+        console.log('✅ Тестовые товары перезаписаны');
+
     } catch (err) {
         console.error('❌ Ошибка инициализации товаров:', err);
     } finally {
         await client.end();
     }
 }
-
 // Получение всех товаров
 router.get('/products', async (req, res) => {
     const client = new Client(dbConfig);
