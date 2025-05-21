@@ -1,0 +1,19 @@
+{
+  "maxplayers": 50,
+  "name": "Treasure Hunt Server",
+  "gamemode": "freeroam",
+  "stream-distance": 500,
+  "announce": false,
+  "csharp": "disabled",
+  "port": 22105,
+  "enable-http": true,
+  "http-port": 22106,
+  "modules": ["nodejs"],
+  "resources": [
+    "spawnmanager",
+    "chat",
+    "gui",
+    "freeroam",
+    "treasure_hunt"
+  ]
+}
