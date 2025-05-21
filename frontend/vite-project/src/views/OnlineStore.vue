@@ -98,171 +98,7 @@ export default {
       categories: ['Электроника', 'Мебель', 'Одежда', 'Книги', 'Спорт'],
       showCart: false,
       cartItems: [],
-      products: [
-  // Электроника
-  {
-    name: 'Игровой ноутбук ASUS ROG',
-    price: 149990,
-    weight: 2500,
-    stock: 10,
-    district: 'Центральный',
-    category: 'Электроника',
-    description: 'RTX 4080, 32GB DDR5, 1TB SSD, 17.3" 240Hz',
-    image: 'https://loremflickr.com/400/300/laptop?lock=1'
-  },
-  {
-    name: 'Смартфон iPhone 15 Pro',
-    price: 99990,
-    weight: 187,
-    stock: 15,
-    district: 'Северный',
-    category: 'Электроника',
-    description: '6.1" OLED, A17 Bionic, 256GB',
-    image: 'https://loremflickr.com/400/300/phone?lock=2'
-  },
-  {
-    name: 'Наушники Sony WH-1000XM5',
-    price: 29990,
-    weight: 250,
-    stock: 8,
-    district: 'Западный',
-    category: 'Электроника',
-    description: 'Беспроводные с шумоподавлением',
-    image: 'https://loremflickr.com/400/300/headphones?lock=3'
-  },
-
-  // Мебель
-  {
-    name: 'Угловой диван "Милан"',
-    price: 65990,
-    weight: 85000,
-    stock: 3,
-    district: 'Южный',
-    category: 'Мебель',
-    description: 'Кожаная обивка, модульная система',
-    image: 'https://loremflickr.com/400/300/sofa?lock=4'
-  },
-  {
-    name: 'Офисный стол "Престиж"',
-    price: 18990,
-    weight: 15000,
-    stock: 7,
-    district: 'Центральный',
-    category: 'Мебель',
-    description: 'Стеклянная столешница, металлический каркас',
-    image: 'https://loremflickr.com/400/300/desk?lock=5'
-  },
-  {
-    name: 'Книжный шкаф "Винтаж"',
-    price: 23490,
-    weight: 32000,
-    stock: 2,
-    district: 'Восточный',
-    category: 'Мебель',
-    description: 'Дуб, 4 секции, витражные стекла',
-    image: 'https://loremflickr.com/400/300/bookshelf?lock=6'
-  },
-
-  // Одежда
-  {
-    name: 'Зимняя куртка Canada Goose',
-    price: 89990,
-    weight: 1300,
-    stock: 5,
-    district: 'Северный',
-    category: 'Одежда',
-    description: 'Пуховая, ветрозащитная, размеры 48-56',
-    image: 'https://loremflickr.com/400/300/jacket?lock=7'
-  },
-  {
-    name: 'Джинсы Levi\'s 501',
-    price: 7990,
-    weight: 450,
-    stock: 12,
-    district: 'Центральный',
-    category: 'Одежда',
-    description: 'Классический крой, сырой деним',
-    image: 'https://loremflickr.com/400/300/jeans?lock=8'
-  },
-  {
-    name: 'Вечернее платье Gucci',
-    price: 120000,
-    weight: 800,
-    stock: 1,
-    district: 'Западный',
-    category: 'Одежда',
-    description: 'Шёлковое, ручная вышивка',
-    image: 'https://loremflickr.com/400/300/dress?lock=9'
-  },
-
-  // Книги
-  {
-    name: '1984 - Джордж Оруэлл',
-    price: 890,
-    weight: 350,
-    stock: 20,
-    district: 'Восточный',
-    category: 'Книги',
-    description: 'Антиутопия, новое переводное издание',
-    image: 'https://loremflickr.com/400/300/book?lock=10'
-  },
-  {
-    name: 'Властелин Колец - Полное собрание',
-    price: 4590,
-    weight: 2100,
-    stock: 6,
-    district: 'Южный',
-    category: 'Книги',
-    description: 'Подарочное издание с иллюстрациями',
-    image: 'https://loremflickr.com/400/300/lotr?lock=11'
-  },
-  {
-    name: 'Краткая история времени - Хокинг',
-    price: 1290,
-    weight: 480,
-    stock: 9,
-    district: 'Центральный',
-    category: 'Книги',
-    description: 'Популярная наука о космологии',
-    image: 'https://loremflickr.com/400/300/science?lock=12'
-  },
-
-  // Спорт
-  {
-    name: 'Горный велосипед Stern',
-    price: 75990,
-    weight: 14500,
-    stock: 4,
-    district: 'Северный',
-    category: 'Спорт',
-    description: '29" колёса, алюминиевая рама',
-    image: 'https://loremflickr.com/400/300/bicycle?lock=13'
-  },
-  {
-    name: 'Набор гантелей 20 кг',
-    price: 3490,
-    weight: 20000,
-    stock: 8,
-    district: 'Восточный',
-    category: 'Спорт',
-    description: 'Регулируемый вес, прорезиненные диски',
-    image: 'https://loremflickr.com/400/300/dumbbell?lock=14'
-  },
-  {
-    name: 'Кроссовки Nike Air Max',
-    price: 12990,
-    weight: 320,
-    stock: 11,
-    district: 'Центральный',
-    category: 'Спорт',
-    description: 'Беговые, амортизация Air',
-    image: 'https://loremflickr.com/400/300/sneakers?lock=15'
-  }
-].map((p, index) => ({
-  ...p,
-  tempId: `temp${index + 1}`, // Генерация читаемых временных ID
-  serverId: null
-}))
+      products: [] // Изначально пустой массив
     }
   },
   computed: {
@@ -273,17 +109,46 @@ export default {
   methods: {
     async loadProducts() {
       try {
-        // Пример запроса к API
-        const response = await fetch('/api/products')
-        const serverProducts = await response.json()
+        // 1. Используем абсолютный URL для исключения проблем с относительными путями
+        const response = await fetch('http://localhost:3000/api/wholesale/products');
 
-        // Синхронизация с серверными данными
-        this.products = this.products.map(localProduct => {
-          const serverData = serverProducts.find(sp => sp.tempId === localProduct.tempId)
-          return serverData ? { ...localProduct, ...serverData } : localProduct
-        })
+        // 2. Добавляем явное указание ожидаемого Content-Type
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          const raw = await response.text();
+          console.error('Received non-JSON response:', raw.slice(0, 200));
+          throw new Error('Некорректный формат ответа сервера');
+        }
+
+        // 3. Проверяем статус ответа
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(`Ошибка сервера: ${errorData.error || response.statusText}`);
+        }
+
+        // 4. Детальное логирование ответа
+        const serverProducts = await response.json();
+        console.log('Received products:', serverProducts);
+
+        // 5. Проверяем преобразование данных
+        this.products = serverProducts.map(product => ({
+          // Важно: названия полей должны точно совпадать с ответом сервера
+          name: product.name,
+          price: product.price,
+          weight: product.weight,
+          stock: product.stock,
+          district: product.district,
+          category: product.category,
+          description: product.description,
+          image: product.image,  // Сервер использует поле 'image', а не 'image_url'
+          tempId: `wh_${product.id}`,
+          serverId: product.id
+        }));
+
       } catch (error) {
-        console.error('Ошибка загрузки продуктов:', error)
+        console.error('Full error details:', error);
+        this.products = [];
+        alert(`Ошибка загрузки: ${error.message}`);
       }
     },
 
