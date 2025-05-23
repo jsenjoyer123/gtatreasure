@@ -70,7 +70,7 @@ export default {
       this.error = null;
 
       try {
-        const baseUrl = 'http://localhost:3000';
+        const baseUrl = import.meta.env.VITE_API_BASE_URL;
         // Кодируем категорию для URL
         const encodedCategory = encodeURIComponent(this.selectedCategory);
         const url = `${baseUrl}/api/products/category/${encodedCategory}`;
@@ -134,7 +134,7 @@ export default {
         const userId = localStorage.getItem('userId');
 
         // Добавим абсолютный URL для бэкенда
-        const baseUrl = 'http://localhost:3000'; // URL вашего бэкенд-сервера
+        const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
         // Запрос к API для обработки покупки
         const response = await fetch(`${baseUrl}/api/purchase`, {

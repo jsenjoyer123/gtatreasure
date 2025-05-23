@@ -110,8 +110,8 @@ export default {
     async loadProducts() {
       try {
         // 1. Используем абсолютный URL для исключения проблем с относительными путями
-        const response = await fetch('http://localhost:3000/api/wholesale/products');
-
+        const baseUrl = import.meta.env.VITE_API_BASE_URL;
+        const response = await fetch(`${baseUrl}/api/wholesale/products`);
         // 2. Добавляем явное указание ожидаемого Content-Type
         const contentType = response.headers.get('content-type');
         if (!contentType || !contentType.includes('application/json')) {

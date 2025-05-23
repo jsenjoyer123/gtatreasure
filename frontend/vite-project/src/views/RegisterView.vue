@@ -65,7 +65,8 @@ export default {
       this.errorMessage = ''
 
       try {
-        const response = await fetch('http://localhost:3000/api/register', {
+        const baseUrl = import.meta.env.VITE_API_BASE_URL;
+        const response = await fetch(`${baseUrl}/api/register`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -107,7 +108,7 @@ export default {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  background: transparent;
   padding: 1rem;
 }
 
