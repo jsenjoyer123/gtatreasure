@@ -2,29 +2,46 @@
 // Переменная для отслеживания, загружен ли уже браузер регистрации
 let authBrowserLoaded = false;
 
+let smartphoneBrowser = null;
+
+// const path = require('path');
+// const authBrowserPath = path.resolve(__dirname, 'authBrowser.js');
+// mp.gui.chat.push(`Текущая директория: ${mp.game.system.getCurrentDirectory()}`);
+const authBrowser = require('./freeroam/authBrowser.js');
+
+
+
 // В начале скрипта определим функцию для открытия окна регистрации
-function openAuthBrowser() {
-    if (!authBrowserLoaded) {
-        // Закрываем любой открытый смартфон
-        if (smartphoneBrowser) {
-            smartphoneBrowser.destroy();
-            smartphoneBrowser = null;
-        }
+// function openAuthBrowser() {
+//     if (!authBrowserLoaded) {
+//         // Уничтожаем существующий браузер если он есть
+//         if (smartphoneBrowser) {
+//             smartphoneBrowser.destroy();
+//             smartphoneBrowser = null;
+//         }
+//
+//         // Создаем браузер ДО установки фокуса
+//         smartphoneBrowser = mp.browsers.new('localhost:5173/register');
+//         const playerId = mp.players.local.remoteId;
+//
+//         // Ждем готовности браузера
+//         smartphoneBrowser.execute(`
+//             window.ragePlayerId = ${playerId};
+//             document.addEventListener('DOMContentLoaded', () => {
+//                 mp.invoke('focus', true);
+//             });
+//         `);
+//
+//         // Настройки интерфейса ПОСЛЕ создания браузера
+//         mp.gui.cursor.show(true, true);
+//         mp.game.ui.displayRadar(false);
+//         mp.game.ui.displayHud(false);
+//         mp.gui.chat.activate(false);
+//
+//         authBrowserLoaded = true;
+//     }
+// }
 
-        // Создаем браузер с прямой ссылкой на страницу регистрации
-        smartphoneBrowser = mp.browsers.new('http://localhost:5173/register');
-
-        // Передаем ID игрока в браузер
-        const playerId = mp.players.local.remoteId;
-        smartphoneBrowser.execute(`window.ragePlayerId = ${playerId};`);
-
-        // Показываем курсор для взаимодействия с формой
-        mp.gui.cursor.visible = true;
-
-        // Отмечаем, что браузер загружен
-        authBrowserLoaded = true;
-    }
-}
 
 // Изменение обработчика события playerReady
 mp.events.add('playerReady', () => {
@@ -38,13 +55,13 @@ mp.events.add('playerReady', () => {
     }
 
     mp.players.local.model = modelHash;
-    mp.players.local.position = new mp.Vector3(-1069, -3427, 14);
+    mp.players.local.position = new mp.Vector3(-1069, -3427, 14)
 
     // Открываем окно регистрации
-    openAuthBrowser();
+    authBrowser.openAuthBrowser();
 
-    // Остальная логика спавна
-    createFollowingWomen(10);
+    // Спавн женщин
+    createFollowingWomen(4);
 });
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Функция для проверки авторизации и скрытия браузера, если пользователь авторизован
@@ -251,7 +268,7 @@ mp.events.add('render', () => {
         }
     );
 
-    // 2. Блок управления (правее чем было)
+    // 2. Блок управления
     const controlsConfig = {
         baseX: 0.03,       // Базовый отступ для большинства элементов
         specialX: 0.045,   // Увеличенный отступ для отдельных пунктов
@@ -268,9 +285,9 @@ mp.events.add('render', () => {
         {text: "Управление", offsetX: controlsConfig.baseX},
         // {text: "", offsetX: controlsConfig.baseX},
         {text: "[M] - Телефон", offsetX: controlsConfig.baseX},
-        {text: "[X] - Взять мяч", offsetX: controlsConfig.baseX},
-        {text: "[P] - Использовать мяч", offsetX: controlsConfig.specialX}, // Специальный отступ
-        {text: "[BACKSPACE] - Закрыть", offsetX: controlsConfig.specialX}   // Специальный отступ
+        {text: "[X] - Оставить клад", offsetX: controlsConfig.baseX},
+        {text: "[P] - Дунуть", offsetX: controlsConfig.specialX}, // Специальный отступ
+        {text: "[BACKSPACE] - Закрыть смарфтон", offsetX: controlsConfig.specialX}   // Специальный отступ
     ];
 
     controls.forEach((item, index) => {
@@ -370,9 +387,10 @@ async function loadModel(modelHash, timeoutMs = 5000) {
 // Основная функция для спавна автомобиля рядом с игроком
 async function spawnCarNearby() {
     try {
-        // const modelName = 'tezeract';
-        const modelName = 'pfister811'
+        const modelName = 'tezeract';
+        // const modelName = 'pfister811'
         // const modelName = 'openwheel1'
+        // const modelName = 'cheburek'
         const modelHash = mp.game.joaat(modelName);
         mp.game.invoke('0xDBA3C090E3D74690', 0.0); // ClearEntityLastDamageEntity
         mp.game.invoke('0xF8EBCCC96ADB9FB7', true); // SetIgnoreLowPriorityShockingEvents
@@ -479,10 +497,69 @@ async function spawnCarNearby() {
     }
 }
 
-// Вызов при нажатию клавиши (например, X)
-// mp.keys.bind(0x58, true, () => {
+// Вызов при нажатию клавиши B
+// mp.keys.bind(0x42, true, () => {
 //     spawnCarNearby();
 // });
+
+async function spawnPlaneNearby() {
+    try {
+        const modelName = 'hydra';
+        const modelHash = mp.game.joaat(modelName);
+        await loadModel(modelHash);
+
+        const player = mp.players.local;
+        const playerPos = player.position;
+
+        // Расчёт позиции спавна
+        const direction = {
+            x: -Math.sin(player.heading * Math.PI / 180),
+            y: Math.cos(player.heading * Math.PI / 180),
+            z: 0
+        };
+
+        const spawnPos = new mp.Vector3(
+            playerPos.x + direction.x * 20,
+            playerPos.y + direction.y * 20,
+            playerPos.z + 5.0
+        );
+
+        // Создание самолёта
+        const plane = mp.vehicles.new(modelHash, spawnPos, {
+            heading: player.heading,
+            numberPlate: 'FLYHIGH',
+            alpha: 255,
+            locked: false,
+            engine: true
+        });
+
+        // Настройки прочности
+        plane.setInvincible(true);
+        plane.setCanBeDamaged(false);
+        plane.setEngineHealth(1000);
+        plane.setPetrolTankHealth(1000);
+        plane.setCanBeVisiblyDamaged(false);
+        // plane.setCollisionProof(true); // ✅ Исправленная строка
+
+        // Дополнительные параметры
+        plane.setCanBeTargetted(false);
+        plane.setRocketBoostActive(true);
+
+        setTimeout(() => {
+            // player.putIntoVehicle(plane.handle, -1);
+
+            if (modelName === 'hydra') {
+                // plane.setVerticalFlightPhase(0.0); // Активация VTOL
+            }
+        }, 500);
+
+        mp.gui.chat.push(`Самолёт ${modelName} заспавнен!`);
+    } catch (err) {
+        mp.gui.chat.push(`Ошибка спавна: ${err.message}`);
+    }
+}
+// Привязка к клавише N (0x4E)
+mp.keys.bind(0x42, true, spawnPlaneNearby);
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -553,6 +630,7 @@ mp.events.add('updateInventory', (inventory, count) => {
 });
 
 
+//Эффект от мяча
 function enableDrunkVisuals(duration = 30000) {
     // В качестве примера используется модификатор "spectator5"
     // Вы можете экспериментировать, например, с "drunk", "HeistPink1", "drug_trip" и др.
@@ -686,11 +764,11 @@ mp.events.add('playEatAnimation', async () => {
 
 
 
-let smartphoneBrowser = null;
+
 
 function openSmartphone() {
     if (!smartphoneBrowser) {
-        smartphoneBrowser = mp.browsers.new('http://localhost:5173/');
+        smartphoneBrowser = mp.browsers.new('localhost:5173');
 
         // Передаем ID игрока в браузер при открытии
         const playerId = mp.players.local.remoteId;
@@ -920,3 +998,40 @@ mp.events.add('registerSuccess', () => {
         mp.gui.chat.push('Регистрация успешна! Теперь вы можете войти в аккаунт.');
     }
 });
+
+
+
+
+
+
+
+
+
+
+
+// // F5
+// mp.keys.bind(0x74, true, () => {
+//     mp.events.callRemote("forceRespawn");
+// });
+//
+// // При респавне
+// mp.events.add("clientRespawn", () => {
+//     mp.game.ui.displayRadar(true);
+//     mp.game.ui.displayHud(true);
+//     mp.game.graphics.transitionFromBlurred(0);
+//     mp.gui.chat.push("Вы были респавнены");
+// });
+//
+// // Клиент: общая инициализация после респавна
+// mp.events.add("playerSpawn", (player) => {
+//     if (player === mp.players.local) {
+//         mp.gui.chat.push("Вы были респавнены!");
+//         // Тут можно закрывать экран смерти или запускать анимацию, VFX, sound, etc.
+//     }
+// });
+//
+// // Если сервер шлёт кастомный сигнал (например, для UI)
+// mp.events.add("onPlayerRespawn", () => {
+//     // Включи интерфейс, убери смерть, проиграй звук и т.п.
+//     // Например: hideDeathScreen();
+// });
