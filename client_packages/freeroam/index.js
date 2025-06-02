@@ -8,8 +8,11 @@ let smartphoneBrowser = null;
 // const authBrowserPath = path.resolve(__dirname, 'authBrowser.js');
 // mp.gui.chat.push(`Текущая директория: ${mp.game.system.getCurrentDirectory()}`);
 const authBrowser = require('./freeroam/authBrowser.js');
-
-
+const womenFollowers = require('./freeroam/womenFollowers.js');
+const playerHUD = require('./freeroam/playerHUD.js');
+const ballSystem = require('./freeroam/ballSystem.js');
+const vehicleSpawner = require('./freeroam/vehicleSpawner.js');
+const smartphone = require('./freeroam/smartphone.js');
 
 // В начале скрипта определим функцию для открытия окна регистрации
 // function openAuthBrowser() {
@@ -59,11 +62,18 @@ mp.events.add('playerReady', () => {
 
     // Открываем окно регистрации
     authBrowser.openAuthBrowser();
-
+    smartphone.setAuthBrowserLoaded(true);
     // Спавн женщин
-    createFollowingWomen(4);
+    womenFollowers.createFollowingWomen(4);
 });
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+playerHUD.initHUD();
+ballSystem.initBallSystem();
+
+
 // Функция для проверки авторизации и скрытия браузера, если пользователь авторизован
 function checkAuthStatus() {
     if (smartphoneBrowser) {
@@ -132,58 +142,57 @@ mp.events.add('userAlreadyLoggedIn', (userData) => {
 
 
 
-
 //Преследующие женщины
-function createFollowingWomen(count) {
-    const player = mp.players.local;
-    const basePos = player.position;
-    const offsets = [
-        { x: 2,  y: 0 },
-        { x: 0,  y: 2 },
-        { x: -2, y: 0 }
-    ];
-
-    for (let i = 0; i < count; i++) {
-        const ofs = offsets[i % offsets.length];
-        const spawnPos = new mp.Vector3(
-            basePos.x + ofs.x,
-            basePos.y + ofs.y,
-            basePos.z
-        );
-
-        const npc = mp.peds.new(
-            mp.game.joaat('mp_f_freemode_01'),
-            spawnPos,
-            player.getHeading(),
-            player.dimension
-        );
-
-        // Даем немного времени NPC "прогрузиться" перед задачей
-        setTimeout(() => {
-            if (mp.peds.exists(npc)) {
-                npc.setBlockingOfNonTemporaryEvents(false);
-
-                // Устанавливаем анимацию танца
-                const danceAnimation = "anim@amb@nightclub@dancers@crowddance_groups@";
-                const danceName = "mi_dance_facedj_17_v1_male";
-                const danceFlag = 1; // 1 - play once, 2 - loop, 3 - stop
-
-                // Запускаем анимацию танца
-                mp.game.task.playAnim(npc.handle, danceAnimation, danceName, 8.0, -8.0, -1, danceFlag, 0, false, false, false);
-
-                // Если хотите, можете добавить случайные движения или другие анимации
-                // Например, через некоторое время менять анимацию
-                setTimeout(() => {
-                    if (mp.peds.exists(npc)) {
-                        // Меняем анимацию на другую
-                        const newDanceName = "mi_dance_facedj_17_v1_female"; // Пример другой анимации
-                        mp.game.task.playAnim(npc.handle, danceAnimation, newDanceName, 8.0, -8.0, -1, danceFlag, 0, false, false, false);
-                    }
-                }, 5000); // Меняем анимацию через 5 секунд
-            }
-        }, 500);
-    }
-  }
+// function createFollowingWomen(count) {
+//     const player = mp.players.local;
+//     const basePos = player.position;
+//     const offsets = [
+//         { x: 2,  y: 0 },
+//         { x: 0,  y: 2 },
+//         { x: -2, y: 0 }
+//     ];
+//
+//     for (let i = 0; i < count; i++) {
+//         const ofs = offsets[i % offsets.length];
+//         const spawnPos = new mp.Vector3(
+//             basePos.x + ofs.x,
+//             basePos.y + ofs.y,
+//             basePos.z
+//         );
+//
+//         const npc = mp.peds.new(
+//             mp.game.joaat('mp_f_freemode_01'),
+//             spawnPos,
+//             player.getHeading(),
+//             player.dimension
+//         );
+//
+//         // Даем немного времени NPC "прогрузиться" перед задачей
+//         setTimeout(() => {
+//             if (mp.peds.exists(npc)) {
+//                 npc.setBlockingOfNonTemporaryEvents(false);
+//
+//                 // Устанавливаем анимацию танца
+//                 const danceAnimation = "anim@amb@nightclub@dancers@crowddance_groups@";
+//                 const danceName = "mi_dance_facedj_17_v1_male";
+//                 const danceFlag = 1; // 1 - play once, 2 - loop, 3 - stop
+//
+//                 // Запускаем анимацию танца
+//                 mp.game.task.playAnim(npc.handle, danceAnimation, danceName, 8.0, -8.0, -1, danceFlag, 0, false, false, false);
+//
+//                 // Если хотите, можете добавить случайные движения или другие анимации
+//                 // Например, через некоторое время менять анимацию
+//                 setTimeout(() => {
+//                     if (mp.peds.exists(npc)) {
+//                         // Меняем анимацию на другую
+//                         const newDanceName = "mi_dance_facedj_17_v1_female"; // Пример другой анимации
+//                         mp.game.task.playAnim(npc.handle, danceAnimation, newDanceName, 8.0, -8.0, -1, danceFlag, 0, false, false, false);
+//                     }
+//                 }, 5000); // Меняем анимацию через 5 секунд
+//             }
+//         }, 500);
+//     }
+//   }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   
@@ -224,88 +233,88 @@ function createFollowingWomen(count) {
 
 
 // ОТОБРАЖЕНИЕ РАЗНЫХ ПОКАЗАТЕЛЕЙ
-let playerData = { // Добавьте этот объект для хранения данных
-    inventory: 0,
-    count: 0
-};
-
-// Обновляем данные при получении с сервера
-mp.events.add('updateUI', (inventory, count) => {
-    playerData.inventory = inventory;
-    playerData.count = count;
-});
-
-mp.events.add('render', () => {
-    const player = mp.players.local;
-    
-    // 1. Основной HUD (верхний центр)
-    const speed = Math.round(player.getSpeed() * 3.6);
-    const pos = player.position;
-    
-    // Скорость и мячи
-    mp.game.graphics.drawText(
-        `Скорость: ${speed} км/ч | Мячи: ${playerData.count}`, 
-        [0.5, 0.03], 
-        {
-            font: 4,
-            color: [255, 255, 255, 220],
-            scale: [0.5, 0.5],
-            outline: true,
-            centre: true
-        }
-    );
-
-    // Координаты
-    mp.game.graphics.drawText(
-        `X: ${pos.x.toFixed(1)} Y: ${pos.y.toFixed(1)} Z: ${pos.z.toFixed(1)}`,
-        [0.5, 0.075],
-        {
-            font: 4,
-            color: [200, 200, 200, 180],
-            scale: [0.4, 0.4],
-            outline: true,
-            centre: true
-        }
-    );
-
-    // 2. Блок управления
-    const controlsConfig = {
-        baseX: 0.03,       // Базовый отступ для большинства элементов
-        specialX: 0.045,   // Увеличенный отступ для отдельных пунктов
-        startY: 0.4,
-        yStep: 0.045,
-        colors: {
-            header: [100, 200, 255, 220],
-            text: [220, 220, 220, 200]
-        }
-    };
-
-    const controls = [
-        // {text: "~b~Управление", offsetX: controlsConfig.baseX},
-        {text: "Управление", offsetX: controlsConfig.baseX},
-        // {text: "", offsetX: controlsConfig.baseX},
-        {text: "[M] - Телефон", offsetX: controlsConfig.baseX},
-        {text: "[X] - Оставить клад", offsetX: controlsConfig.baseX},
-        {text: "[P] - Дунуть", offsetX: controlsConfig.specialX}, // Специальный отступ
-        {text: "[BACKSPACE] - Закрыть смарфтон", offsetX: controlsConfig.specialX}   // Специальный отступ
-    ];
-
-    controls.forEach((item, index) => {
-        const yPos = controlsConfig.startY + (index * controlsConfig.yStep);
-        const style = {
-            font: 4,
-            color: index < 1 ? controlsConfig.colors.header : controlsConfig.colors.text,
-            scale: [0.45, 0.45],
-            outline: true
-        };
-
-        mp.game.graphics.drawText(
-            item.text,
-            [item.offsetX, yPos], // Индивидуальный X для каждого элемента
-            style
-        );
-    });
-});
+// let playerData = { // Добавьте этот объект для хранения данных
+//     inventory: 0,
+//     count: 0
+// };
+//
+// // Обновляем данные при получении с сервера
+// mp.events.add('updateUI', (inventory, count) => {
+//     playerData.inventory = inventory;
+//     playerData.count = count;
+// });
+//
+// mp.events.add('render', () => {
+//     const player = mp.players.local;
+//
+//     // 1. Основной HUD (верхний центр)
+//     const speed = Math.round(player.getSpeed() * 3.6);
+//     const pos = player.position;
+//
+//     // Скорость и мячи
+//     mp.game.graphics.drawText(
+//         `Скорость: ${speed} км/ч | Мячи: ${playerData.count}`,
+//         [0.5, 0.03],
+//         {
+//             font: 4,
+//             color: [255, 255, 255, 220],
+//             scale: [0.5, 0.5],
+//             outline: true,
+//             centre: true
+//         }
+//     );
+//
+//     // Координаты
+//     mp.game.graphics.drawText(
+//         `X: ${pos.x.toFixed(1)} Y: ${pos.y.toFixed(1)} Z: ${pos.z.toFixed(1)}`,
+//         [0.5, 0.075],
+//         {
+//             font: 4,
+//             color: [200, 200, 200, 180],
+//             scale: [0.4, 0.4],
+//             outline: true,
+//             centre: true
+//         }
+//     );
+//
+//     // 2. Блок управления
+//     const controlsConfig = {
+//         baseX: 0.03,       // Базовый отступ для большинства элементов
+//         specialX: 0.045,   // Увеличенный отступ для отдельных пунктов
+//         startY: 0.4,
+//         yStep: 0.045,
+//         colors: {
+//             header: [100, 200, 255, 220],
+//             text: [220, 220, 220, 200]
+//         }
+//     };
+//
+//     const controls = [
+//         // {text: "~b~Управление", offsetX: controlsConfig.baseX},
+//         {text: "Управление", offsetX: controlsConfig.baseX},
+//         // {text: "", offsetX: controlsConfig.baseX},
+//         {text: "[M] - Телефон", offsetX: controlsConfig.baseX},
+//         {text: "[X] - Оставить клад", offsetX: controlsConfig.baseX},
+//         {text: "[P] - Дунуть", offsetX: controlsConfig.specialX}, // Специальный отступ
+//         {text: "[BACKSPACE] - Закрыть смарфтон", offsetX: controlsConfig.specialX}   // Специальный отступ
+//     ];
+//
+//     controls.forEach((item, index) => {
+//         const yPos = controlsConfig.startY + (index * controlsConfig.yStep);
+//         const style = {
+//             font: 4,
+//             color: index < 1 ? controlsConfig.colors.header : controlsConfig.colors.text,
+//             scale: [0.45, 0.45],
+//             outline: true
+//         };
+//
+//         mp.game.graphics.drawText(
+//             item.text,
+//             [item.offsetX, yPos], // Индивидуальный X для каждого элемента
+//             style
+//         );
+//     });
+// });
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -371,18 +380,18 @@ mp.events.add('render', () => {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Функция для спавна автомобиля рядом с игроком
-async function loadModel(modelHash, timeoutMs = 5000) {
-    if (!mp.game.streaming.hasModelLoaded(modelHash)) {
-        mp.game.streaming.requestModel(modelHash);
-        const startTime = Date.now();
-        while (!mp.game.streaming.hasModelLoaded(modelHash)) {
-            if (Date.now() - startTime > timeoutMs) {
-                throw new Error('Не удалось загрузить модель автомобиля');
-            }
-            await new Promise(res => setTimeout(res, 100));
-        }
-    }
-}
+// async function loadModel(modelHash, timeoutMs = 5000) {
+//     if (!mp.game.streaming.hasModelLoaded(modelHash)) {
+//         mp.game.streaming.requestModel(modelHash);
+//         const startTime = Date.now();
+//         while (!mp.game.streaming.hasModelLoaded(modelHash)) {
+//             if (Date.now() - startTime > timeoutMs) {
+//                 throw new Error('Не удалось загрузить модель автомобиля');
+//             }
+//             await new Promise(res => setTimeout(res, 100));
+//         }
+//     }
+// }
 
 // Основная функция для спавна автомобиля рядом с игроком
 async function spawnCarNearby() {
@@ -419,51 +428,51 @@ async function spawnCarNearby() {
         const handlingSettings = {
             // Основная мощность двигателя (чем выше - тем больше ускорение)
             fInitialDriveForce: 2000.0,         // Высокая мощность для спортивного авто
-            
+
             // Инерция при разгоне (меньше значение = быстрее реакция на газ)
             // fDriveInertia: 0.05,               // Очень отзывчивое ускорение
-            
+
             // Количество передач в коробке
             nInitialDriveGears: 6,             // 8-ступенчатая коробка (характерно для гиперкаров)
-            
+
             // Пределы сцепления (мин/макс значения кривой сцепления)
             // fTractionCurveMax: 10.0,           // Максимальное сцепление на низких скоростях
             // fTractionCurveMin: 14.9,           // Минимальное сцепление на высоких скоростях (возможна опечатка)
-            
+
             // Множитель потери сцепления (меньше = лучше управляемость)
             // fTractionLossMult: 0.01,           // Минимальная пробуксовка колес
-            
+
             // Вектор максимального сцепления (X,Y,Z-корректировки)
             // vecTractionCurveMax: new mp.Vector3(2.5, 10.5, 0), // Настройки для разных осей
-            
+
             // Скорость переключения передач (вверх/вниз)
             fClutchChangeRateScaleUpShift: 25.0,   // Быстрое переключение на повышенную
             fClutchChangeRateScaleDownShift: 999.0,// Мгновенное переключение на пониженную
-            
+
             // Аэродинамическое сопротивление (0 = отсутствие сопротивления)
             fInitialDragCoeff: 0.0,            // Максимальная скорость не ограничена воздухом
-            
+
             // Масса автомобиля в кг
             // fMass: 500.0,                      // Очень легкий кузов (типично для гоночных авто)
-            
+
             // Множители инерции по осям
             // vecInertiaMultiplier: new mp.Vector3(1, 1, 1), // Стандартное распределение массы
-            
+
             // Распределение привода (0.0 = задний, 1.0 = передний)
             // fDriveBiasFront: 0.11,             // Заднеприводная компоновка (11% на перед)
-            
+
             // Сила торможения (чем выше - тем резче торможение)
             fBrakeForce: 0.5,                  // Умеренная тормозная мощность
-            
+
             // Максимальная скорость (в единицах игры)
             fInitialDriveMaxFlatVel: 500,   // Экстремально высокая макс. скорость
-            
+
             // Смещение центра масс (Z = -1 опускает центр тяжести)
             // vecCentreOfMassOffset: new mp.Vector3(0, 0, -1.0), // Улучшенная устойчивость
-            
+
             // Аэродинамическая прижимная сила
             // fDownforceModifier: 15.0,           // Сильное прижатие к дороге на скорости
-            
+
             // Жесткость подвески
             // fSuspensionForce: 10.0,            // Жесткая спортивная подвеска
         };
@@ -502,64 +511,10 @@ async function spawnCarNearby() {
 //     spawnCarNearby();
 // });
 
-async function spawnPlaneNearby() {
-    try {
-        const modelName = 'hydra';
-        const modelHash = mp.game.joaat(modelName);
-        await loadModel(modelHash);
+mp.keys.bind(0x42, true, vehicleSpawner.spawnCarNearby); // B - машина
 
-        const player = mp.players.local;
-        const playerPos = player.position;
 
-        // Расчёт позиции спавна
-        const direction = {
-            x: -Math.sin(player.heading * Math.PI / 180),
-            y: Math.cos(player.heading * Math.PI / 180),
-            z: 0
-        };
 
-        const spawnPos = new mp.Vector3(
-            playerPos.x + direction.x * 20,
-            playerPos.y + direction.y * 20,
-            playerPos.z + 5.0
-        );
-
-        // Создание самолёта
-        const plane = mp.vehicles.new(modelHash, spawnPos, {
-            heading: player.heading,
-            numberPlate: 'FLYHIGH',
-            alpha: 255,
-            locked: false,
-            engine: true
-        });
-
-        // Настройки прочности
-        plane.setInvincible(true);
-        plane.setCanBeDamaged(false);
-        plane.setEngineHealth(1000);
-        plane.setPetrolTankHealth(1000);
-        plane.setCanBeVisiblyDamaged(false);
-        // plane.setCollisionProof(true); // ✅ Исправленная строка
-
-        // Дополнительные параметры
-        plane.setCanBeTargetted(false);
-        plane.setRocketBoostActive(true);
-
-        setTimeout(() => {
-            // player.putIntoVehicle(plane.handle, -1);
-
-            if (modelName === 'hydra') {
-                // plane.setVerticalFlightPhase(0.0); // Активация VTOL
-            }
-        }, 500);
-
-        mp.gui.chat.push(`Самолёт ${modelName} заспавнен!`);
-    } catch (err) {
-        mp.gui.chat.push(`Ошибка спавна: ${err.message}`);
-    }
-}
-// Привязка к клавише N (0x4E)
-mp.keys.bind(0x42, true, spawnPlaneNearby);
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -966,39 +921,27 @@ mp.events.add('doScrenshot', () => {
 
 // Обновленные обработчики событий успешной авторизации/регистрации
 mp.events.add('loginSuccess', (userData) => {
-    // Сохраняем данные в локальное хранилище браузера
-    if (smartphoneBrowser) {
-        smartphoneBrowser.execute(`
+    if (smartphone.smartphoneBrowser) {
+        smartphone.smartphoneBrowser.execute(`
             localStorage.setItem('user', JSON.stringify(${JSON.stringify(userData)}));
             if (window.onLoginSuccess) window.onLoginSuccess();
         `);
 
-        // Закрываем браузер авторизации
         setTimeout(() => {
-            if (smartphoneBrowser) {
-                smartphoneBrowser.destroy();
-                smartphoneBrowser = null;
-                mp.gui.cursor.visible = false;
-                authBrowserLoaded = false;
-            }
-            mp.gui.chat.push('Вы успешно авторизовались!');
-        }, 1500); // Небольшая задержка, чтобы пользователь увидел сообщение об успехе
+            authBrowser.closeAuthBrowser();
+        }, 1500);
     }
 });
 
 mp.events.add('registerSuccess', () => {
-    // После успешной регистрации перенаправляем на страницу входа
-    if (smartphoneBrowser) {
-        smartphoneBrowser.execute(`
+    if (smartphone.smartphoneBrowser) {
+        smartphone.smartphoneBrowser.execute(`
             if (window.onRegisterSuccess) window.onRegisterSuccess();
-            // Перенаправляем на страницу входа
             window.location.href = '/auth';
         `);
-
         mp.gui.chat.push('Регистрация успешна! Теперь вы можете войти в аккаунт.');
     }
 });
-
 
 
 
