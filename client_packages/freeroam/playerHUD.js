@@ -45,8 +45,6 @@ exports.initHUD = () => {
 
         // Блок управления
         const controlsConfig = {
-            baseX: 0.03,
-            specialX: 0.045,
             startY: 0.4,
             yStep: 0.045,
             colors: {
@@ -55,13 +53,15 @@ exports.initHUD = () => {
             }
         };
 
+
         const controls = [
-            {text: "Управление", offsetX: controlsConfig.baseX},
-            {text: "[M] - Телефон", offsetX: controlsConfig.baseX},
-            {text: "[X] - Оставить клад", offsetX: controlsConfig.baseX},
-            {text: "[P] - Дунуть", offsetX: controlsConfig.specialX},
-            {text: "[BACKSPACE] - Закрыть смарфтон", offsetX: controlsConfig.specialX}
+            {text: "Управление", offsetX: 0.03},
+            {text: "[M] - Телефон", offsetX: 0.03},
+            {text: "[X] - Оставить клад", offsetX: 0.04},
+            {text: "[P] - Дунуть", offsetX: 0.025},
+            {text: "[BACKSPACE] - Закрыть смарфтон", offsetX: 0.065}
         ];
+
 
         controls.forEach((item, index) => {
             const yPos = controlsConfig.startY + (index * controlsConfig.yStep);
