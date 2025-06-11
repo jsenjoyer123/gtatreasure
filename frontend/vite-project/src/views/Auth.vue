@@ -2,29 +2,29 @@
   <div class="auth-container">
     <div class="auth-card">
       <h2 class="auth-title">Авторизация</h2>
-      
+
       <form @submit.prevent="handleSubmit" class="auth-form">
         <div class="form-group">
-          <label for="email">Email:</label>
+          <label for="username">Имя пользователя:</label>
           <input
-            type="email"
-            id="email"
-            v-model="form.email"
-            required
-            class="form-input"
-            placeholder="Введите ваш email"
+              type="text"
+              id="username"
+              v-model="form.username"
+              required
+              class="form-input"
+              placeholder="Введите username"
           >
         </div>
 
         <div class="form-group">
           <label for="password">Пароль:</label>
           <input
-            type="password"
-            id="password"
-            v-model="form.password"
-            required
-            class="form-input"
-            placeholder="Введите пароль"
+              type="password"
+              id="password"
+              v-model="form.password"
+              required
+              class="form-input"
+              placeholder="Введите пароль"
           >
         </div>
 
@@ -39,7 +39,7 @@
 
       <div class="auth-links">
         <router-link to="/register">Создать аккаунт</router-link>
-<!--        <router-link to="/forgot-password">Забыли пароль?</router-link>-->
+        <!--        <router-link to="/forgot-password">Забыли пароль?</router-link>-->
       </div>
     </div>
   </div>
@@ -51,7 +51,7 @@ export default {
   data() {
     return {
       form: {
-        email: '',
+        username: '',
         password: ''
       },
       loading: false,
@@ -61,7 +61,7 @@ export default {
   methods: {
     async handleSubmit() {
       if (!this.validateForm()) return
-      
+
       this.loading = true
       this.errorMessage = ''
 
@@ -83,15 +83,12 @@ export default {
 
         // Сохраняем данные пользователя
         localStorage.setItem('user', JSON.stringify(data.user));
-        
+
         // Перенаправление
         // this.$router.push('/');
         if (typeof mp !== 'undefined') {
           mp.trigger('authSuccess');
         }
-
-
-
 
       } catch (error) {
         this.errorMessage = error.message || 'Ошибка при авторизации';
@@ -101,17 +98,17 @@ export default {
     },
     validateForm() {
       this.errorMessage = '';
-      
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.form.email)) {
-        this.errorMessage = 'Введите корректный email';
+
+      if (!/^[a-zA-Z0-9_]{3,20}$/.test(this.form.username)) {
+        this.errorMessage = 'Username должен содержать от 3 до 20 символов (буквы, цифры, подчеркивания)';
         return false;
       }
-      
+
       if (this.form.password.length < 6) {
         this.errorMessage = 'Пароль должен содержать минимум 6 символов';
         return false;
       }
-      
+
       return true;
     }
   }
@@ -124,7 +121,7 @@ export default {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  background: transparent;
   padding: 1rem;
 }
 
@@ -184,7 +181,7 @@ export default {
   font-size: 1rem;
   transition: all 0.3s ease;
   background: #f8f9fa;
-  box-sizing: border-box; /* Добавлено */
+  box-sizing: border-box;
 }
 
 .form-input:focus {
@@ -211,8 +208,8 @@ export default {
   font-weight: 600;
   transition: all 0.3s ease;
   letter-spacing: 0.5px;
-  box-sizing: border-box; /* Добавлено */
-  border: 2px solid transparent; /* Добавлено */
+  box-sizing: border-box;
+  border: 2px solid transparent;
 }
 
 .submit-btn:hover:not(:disabled) {
@@ -286,11 +283,11 @@ export default {
     padding: 1.5rem;
     border-radius: 12px;
   }
-  
+
   .auth-title {
     font-size: 1.5rem;
   }
-  
+
   .form-input,
   .submit-btn {
     padding: 0.9rem;

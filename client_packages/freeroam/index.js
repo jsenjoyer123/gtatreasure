@@ -64,7 +64,7 @@ mp.events.add('userAlreadyLoggedIn', (userData) => {
     // Можно загрузить данные пользователя из переданного JSON
     try {
         const userObj = JSON.parse(userData);
-        mp.gui.chat.push(`Добро пожаловать, ${userObj.email}!`);
+        mp.gui.chat.push(`Добро пожаловать, ${userObj.username}!`);
 
         // Тут можно добавить дополнительную логику для уже авторизованных пользователей
     } catch (e) {

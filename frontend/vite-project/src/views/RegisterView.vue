@@ -2,29 +2,29 @@
   <div class="auth-container">
     <div class="auth-card">
       <h2 class="auth-title">Регистрация</h2>
-      
+
       <form @submit.prevent="handleSubmit" class="auth-form">
         <div class="form-group">
-          <label for="email">Email:</label>
+          <label for="username">Имя пользователя:</label>
           <input
-            type="email"
-            id="email"
-            v-model="form.email"
-            required
-            class="form-input"
-            placeholder="Введите email"
+              type="text"
+              id="username"
+              v-model="form.username"
+              required
+              class="form-input"
+              placeholder="Введите username"
           >
         </div>
 
         <div class="form-group">
           <label for="password">Пароль:</label>
           <input
-            type="password"
-            id="password"
-            v-model="form.password"
-            required
-            class="form-input"
-            placeholder="Придумайте пароль (минимум 6 символов)"
+              type="password"
+              id="password"
+              v-model="form.password"
+              required
+              class="form-input"
+              placeholder="Придумайте пароль (минимум 6 символов)"
           >
         </div>
 
@@ -50,7 +50,7 @@ export default {
   data() {
     return {
       form: {
-        email: '',
+        username: '',
         password: ''
       },
       loading: false,
@@ -60,7 +60,7 @@ export default {
   methods: {
     async handleSubmit() {
       if (!this.validateForm()) return
-      
+
       this.loading = true
       this.errorMessage = ''
 
@@ -75,9 +75,9 @@ export default {
         })
 
         const data = await response.json()
-        
+
         if (!response.ok) throw new Error(data.message || 'Ошибка регистрации')
-        
+
         this.$router.push('/auth')
       } catch (error) {
         this.errorMessage = error.message
@@ -86,16 +86,25 @@ export default {
       }
     },
     validateForm() {
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.form.email)) {
-        this.errorMessage = 'Некорректный email'
+      this.errorMessage = '';
+
+      // ❌ БЫЛО: проверка email
+      // if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.form.email)) {
+      //   this.errorMessage = 'Некорректный email'
+      //   return false
+      // }
+
+      // ✅ СТАЛО: проверка username
+      if (!/^[a-zA-Z0-9_]{3,20}$/.test(this.form.username)) {
+        this.errorMessage = 'Username должен содержать от 3 до 20 символов (буквы, цифры, подчеркивания)'
         return false
       }
-      
+
       if (this.form.password.length < 6) {
         this.errorMessage = 'Пароль должен быть не менее 6 символов'
         return false
       }
-      
+
       return true
     }
   }

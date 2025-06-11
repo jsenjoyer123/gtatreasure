@@ -1,15 +1,14 @@
+
 const express = require('express');
 const { Client } = require('pg');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-// Импорт маршрутов для работы с товарами
 const productsRoutes = require('./routes/productsRoutes');
 const wholesaleProductsRoutes = require('./routes/wholesaleProductsRoutes');
 require('dotenv').config();
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpecs = require('./swagger');
-
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -17,23 +16,15 @@ const port = process.env.PORT || 3000;
 app.use(cors({
     origin: 'http://localhost:5173',
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],  // добавляем OPTIONS
-    allowedHeaders: ['Content-Type', 'Accept']  // явно указываем разрешенные заголовки
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Accept']
 }));
-// app.options('*', cors()) // Добавить эту строку перед остальными роутами
+
 // Middleware
 app.use(bodyParser.json());
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 app.use('/api', productsRoutes.router);
 app.use('/api/wholesale', wholesaleProductsRoutes.router);
-
-
-// app.use(cors({
-//   origin: process.env.FRONTEND_URL || 'http://localhost:8080',
-//   credentials: true
-// }));
-
-// В коде сервера добавьте:
 
 // Конфигурация PostgreSQL
 const dbConfig = {
@@ -59,14 +50,38 @@ async function initializeDatabase() {
             )
         `);
 
-        if (!tableCheck.rows[0].exists) {
+        if (tableCheck.rows[0].exists) {
+            // Проверяем структуру таблицы
+            const columnCheck = await client.query(`
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name = 'users' AND column_name = 'username'
+            `);
+
+            if (columnCheck.rows.length === 0) {
+                console.log('🔄 Обнаружена старая структура таблицы users. Пересоздаем...');
+                // Удаляем старую таблицу
+                await client.query('DROP TABLE IF EXISTS users');
+                console.log('🗑️ Старая таблица users удалена');
+            }
+        }
+
+        // Проверяем снова, нужно ли создать таблицу
+        const tableCheckAgain = await client.query(`
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables
+                WHERE table_name = 'users'
+            )
+        `);
+
+        if (!tableCheckAgain.rows[0].exists) {
             console.log('🔄 Создаем таблицу users...');
             await client.query(`
                 CREATE TABLE users (
-                                       id SERIAL PRIMARY KEY,
-                                       email VARCHAR(255) UNIQUE NOT NULL,
-                                       password_hash VARCHAR(255) NOT NULL,
-                                       created_at TIMESTAMP DEFAULT NOW()
+                    id SERIAL PRIMARY KEY,
+                    username VARCHAR(255) UNIQUE NOT NULL,
+                    password_hash VARCHAR(255) NOT NULL,
+                    created_at TIMESTAMP DEFAULT NOW()
                 )
             `);
             console.log('✅ Таблица users создана');
@@ -75,8 +90,8 @@ async function initializeDatabase() {
             const saltRounds = 10;
             const passwordHash = await bcrypt.hash('password', saltRounds);
             await client.query(
-                'INSERT INTO users(email, password_hash) VALUES($1, $2)',
-                ['test@example.com', passwordHash]
+                'INSERT INTO users(username, password_hash) VALUES($1, $2)',
+                ['testuser', passwordHash]
             );
             console.log('✅ Тестовый пользователь создан');
         }
@@ -97,9 +112,9 @@ app.use((req, res, next) => {
 
 // Роут авторизации
 app.post('/api/login', async (req, res) => {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
 
-    if (!email || !password) {
+    if (!username || !password) {
         return res.status(400).json({ message: 'Все поля обязательны для заполнения' });
     }
 
@@ -108,10 +123,10 @@ app.post('/api/login', async (req, res) => {
     try {
         await client.connect();
 
-        // Поиск пользователя
+        // Поиск пользователя по username
         const result = await client.query(
-            'SELECT id, email, password_hash FROM users WHERE email = $1',
-            [email.toLowerCase().trim()]
+            'SELECT id, username, password_hash FROM users WHERE username = $1',
+            [username.toLowerCase().trim()]
         );
 
         if (result.rows.length === 0) {
@@ -132,13 +147,69 @@ app.post('/api/login', async (req, res) => {
             message: 'Авторизация успешна',
             user: {
                 id: user.id,
-                email: user.email
+                username: user.username
             }
         });
 
     } catch (error) {
         console.error('Ошибка авторизации:', error);
         res.status(500).json({ message: 'Внутренняя ошибка сервера' });
+    } finally {
+        await client.end();
+    }
+});
+
+// Роут регистрации
+app.post('/api/register', async (req, res) => {
+    const { username, password } = req.body;
+
+    // Валидация
+    if (!username || !password) {
+        return res.status(400).json({ message: 'Все поля обязательны' });
+    }
+
+    // Валидация username
+    if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
+        return res.status(400).json({ message: 'Username должен содержать от 3 до 20 символов (буквы, цифры, подчеркивания)' });
+    }
+
+    if (password.length < 6) {
+        return res.status(400).json({ message: 'Пароль должен быть не менее 6 символов' });
+    }
+
+    const client = new Client(dbConfig);
+
+    try {
+        await client.connect();
+
+        // Проверка существующего пользователя
+        const existingUser = await client.query(
+            'SELECT id FROM users WHERE username = $1',
+            [username.toLowerCase().trim()]
+        );
+
+        if (existingUser.rows.length > 0) {
+            return res.status(409).json({ message: 'Пользователь уже существует' });
+        }
+
+        // Хеширование пароля
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+        // Создание пользователя
+        const result = await client.query(
+            'INSERT INTO users(username, password_hash) VALUES($1, $2) RETURNING id, username',
+            [username.toLowerCase().trim(), hashedPassword]
+        );
+
+        res.status(201).json({
+            message: 'Регистрация успешна',
+            user: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error('Ошибка регистрации:', error);
+        res.status(500).json({ message: 'Ошибка сервера' });
     } finally {
         await client.end();
     }
@@ -155,58 +226,4 @@ initializeDatabase().then(() => {
     app.listen(port, () => {
         console.log(`🚀 Сервер запущен на порту ${port}`);
     });
-});
-
-app.post('/api/register', async (req, res) => {
-    const { email, password } = req.body;
-
-    // Валидация
-    if (!email || !password) {
-        return res.status(400).json({ message: 'Все поля обязательны' });
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        return res.status(400).json({ message: 'Некорректный email' });
-    }
-
-    if (password.length < 6) {
-        return res.status(400).json({ message: 'Пароль должен быть не менее 6 символов' });
-    }
-
-    const client = new Client(dbConfig);
-
-    try {
-        await client.connect();
-
-        // Проверка существующего пользователя
-        const existingUser = await client.query(
-            'SELECT id FROM users WHERE email = $1',
-            [email.toLowerCase().trim()]
-        );
-
-        if (existingUser.rows.length > 0) {
-            return res.status(409).json({ message: 'Пользователь уже существует' });
-        }
-
-        // Хеширование пароля
-        const saltRounds = 10;
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-        // Создание пользователя
-        const result = await client.query(
-            'INSERT INTO users(email, password_hash) VALUES($1, $2) RETURNING id, email',
-            [email.toLowerCase().trim(), hashedPassword]
-        );
-
-        res.status(201).json({
-            message: 'Регистрация успешна',
-            user: result.rows[0]
-        });
-
-    } catch (error) {
-        console.error('Ошибка регистрации:', error);
-        res.status(500).json({ message: 'Ошибка сервера' });
-    } finally {
-        await client.end();
-    }
 });
