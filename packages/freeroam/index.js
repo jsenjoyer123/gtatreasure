@@ -235,14 +235,14 @@ mp.events.add('spawnObjectNearby', (player, checkLimit = true, customPos = null)
     );
 
     // Создание коллайдера
-    const colshape = mp.colshapes.newSphere(
-        spawnPos.x,
-        spawnPos.y,
-        spawnPos.z,
-        1.5
-    );
+    // const colshape = mp.colshapes.newSphere(
+    //     spawnPos.x,
+    //     spawnPos.y,
+    //     spawnPos.z,
+    //     1.5
+    // );
     colshape.ballId = ball.id;
-    colshape.playerId = player.id;
+    // colshape.playerId = player.id;
 
     // Обновление инвентаря
     if (checkLimit) {
@@ -250,32 +250,48 @@ mp.events.add('spawnObjectNearby', (player, checkLimit = true, customPos = null)
         playerBalls.set(player.id, playerData);
         player.call('updateInventory', [playerData.inventory, playerData.count]);
     }
+
+
+
+    balls.set(ball.id, {
+        ownerId: player.remoteId // Используем уникальный ID игрока
+    });
+
+    // Создаем коллайдер только с ID мяча
+    const colshape = mp.colshapes.newSphere(spawnPos.x, spawnPos.y, spawnPos.z, 1.5);
+    colshape.ballId = ball.id;
 });
 
 // Обработка сбора мяча
 mp.events.add('collectBall', (player, ballId) => {
+    const ballInfo = balls.get(ballId);
+    if (!ballInfo) return;
+
     const ball = mp.objects.at(ballId);
-    if (!ball) return;
+    if (ball) ball.destroy();
 
-    // Удаление объектов
-    ball.destroy();
-    
-    // Обновление данных
-    const playerData = playerBalls.get(player.id);
-    playerData.inventory++;
-    playerData.count++;
-    playerBalls.set(player.id, playerData);
+    // Обновляем данные собирающего игрока
+    const targetPlayer = mp.players.atRemoteId(ballInfo.ownerId);
+    if (targetPlayer) {
+        const playerData = playerBalls.get(targetPlayer.id);
+        playerData.inventory++;
+        playerData.count++;
+        playerBalls.set(targetPlayer.id, playerData);
+        targetPlayer.call('updateInventory', [playerData.inventory, playerData.count]);
+    }
 
-    // Синхронизация
-    player.call('updateInventory', [playerData.inventory, playerData.count]);
+    balls.delete(ballId);
 });
 
 // Обработка входа в коллайдер
 mp.events.add('playerEnterColshape', (player, colshape) => {
-    if (colshape.ballId && colshape.playerId === player.id) {
-        player.call('clientCollectBall', [colshape.ballId]);
-        mp.events.call('collectBall', player, colshape.ballId);
-        colshape.destroy();
+    if (colshape.ballId) {
+        const ball = mp.objects.at(colshape.ballId);
+        if (ball && ball.position.dist(player.position) < 2.0) {
+            player.call('clientCollectBall', [colshape.ballId]);
+            mp.events.call('collectBall', player, colshape.ballId);
+            colshape.destroy();
+        }
     }
 });
 
@@ -298,4 +314,93 @@ mp.events.add('eatBall', (player) => {
 
     // Синхронизация интерфейса
     player.call('updateInventory', [playerData.inventory, playerData.count]);
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// mp.events.add("forceRespawn", (player) => {
+//     player.spawn(new mp.Vector3(-425, 1123, 325));
+//     player.health = 100;
+//     player.armour = 0;
+//     player.setVariable("isDead", false);
+//     player.call("clientRespawn"); // уведомляем клиента!
+// });
+//
+// // Смерть
+// // Сервер: обработка смерти и респавн с задержкой
+// mp.events.add('playerDeath', (player, reason, killer) => {
+//     // Можно отключить управление или показать экран смерти через .call("showDeathScreen")
+//     // Ждём 5 секунд и респавним
+//     setTimeout(() => {
+//         player.spawn(new mp.Vector3(-1069, -3427, 14));
+//         // По желанию меняй скин, оружие, здоровье и т.д.
+//         player.health = 100;
+//         player.armour = 0;
+//         // По желанию: триггер клиентских ивентов
+//         player.call("onPlayerRespawn");
+//     }, 5000);
+// });
+
+
+
+/* ==========================================================
+ *  РЕСПАУН ПОСЛЕ СМЕРТИ
+ * ========================================================== */
+const RESPAWN_POS   = new mp.Vector3(-1069, -3427, 14); // куда спавнить
+const RESPAWN_DELAY = 5000;                             // мс ожидания
+
+mp.events.add('playerDeath', (player, reason, killer) => {
+    console.log(`[DEATH] Игрок ${player.name} умер. Причина: ${reason}`);
+    player.outputChatBox('Вы умерли! Ожидайте возрождения...');
+
+    // Показываем экран смерти
+    player.call('showDeathScreen');
+
+    // Устанавливаем таймер на респавн
+    setTimeout(() => {
+        console.log(`[RESPAWN] Попытка возродить игрока ${player.name}`);
+
+        // Проверяем, существует ли игрок
+        if (!player || !mp.players.exists(player)) {
+            console.log('[RESPAWN] Игрок не существует, отменяем возрождение');
+            return;
+        }
+
+        try {
+            const spawnPos = new mp.Vector3(-1069, -3427, 14);
+
+            // Принудительно убираем экран смерти перед респавном
+            player.call('hideDeathScreen');
+
+            // Респавним игрока
+            player.spawn(spawnPos);
+            console.log(`[RESPAWN] Игрок ${player.name} возрожден в позиции: ${spawnPos.x}, ${spawnPos.y}, ${spawnPos.z}`);
+
+            // Восстанавливаем параметры
+            player.health = 100;
+            player.armour = 0;
+
+            // Уведомляем клиента
+            player.call('onPlayerRespawn');
+            player.outputChatBox('Вы возрождены!');
+
+        } catch (error) {
+            console.error(`[RESPAWN] Ошибка при возрождении игрока ${player.name}:`, error);
+            player.outputChatBox('Ошибка возрождения! Попробуйте перезайти.');
+        }
+    }, RESPAWN_DELAY);
 });

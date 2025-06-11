@@ -11,7 +11,7 @@ const ballSystem = require('./freeroam/ballSystem.js');
 const vehicleSpawner = require('./freeroam/vehicleSpawner.js');
 const smartphone = require('./freeroam/smartphone.js');
 const planeSpawner = require('./freeroam/planeSpawner.js');  // ← новое подключение
-
+require('./freeroam/deathScreen.js'); // ← подключаем экран смерти
 
 // Изменение обработчика события playerReady
 mp.events.add('playerReady', () => {
@@ -33,6 +33,72 @@ mp.events.add('playerReady', () => {
     // Спавн женщин
     womenFollowers.createFollowingWomen(4);
 });
+
+
+mp.events.add('playerSpawn', () => {
+    mp.gui.chat.push('[CLIENT] playerSpawn сработал!');
+
+    // Убедимся, что модель загружена при возрождении
+    let modelName = 'mp_f_freemode_01';
+    let modelHash = mp.game.joaat(modelName);
+
+    if (!mp.game.streaming.hasModelLoaded(modelHash)) {
+        mp.game.streaming.requestModel(modelHash);
+        while (!mp.game.streaming.hasModelLoaded(modelHash)) {
+            mp.game.wait(0);
+        }
+    }
+
+    mp.players.local.model = modelHash;
+
+    // Восстанавливаем здоровье и броню
+    mp.players.local.health = 100;
+    mp.players.local.armour = 0;
+
+    // Убираем экран смерти, если он всё ещё показывается
+    mp.events.call('hideDeathScreen');
+
+    mp.gui.chat.push('[CLIENT] Возрождение завершено!');
+});
+
+
+// Альтернативный обработчик (если playerSpawn не работает)
+mp.events.add('onPlayerRespawn', () => {
+    mp.gui.chat.push('[CLIENT] onPlayerRespawn сработал!');
+
+    let modelName = 'mp_f_freemode_01';
+    let modelHash = mp.game.joaat(modelName);
+
+    if (!mp.game.streaming.hasModelLoaded(modelHash)) {
+        mp.game.streaming.requestModel(modelHash);
+        while (!mp.game.streaming.hasModelLoaded(modelHash)) {
+            mp.game.wait(0);
+        }
+    }
+
+    mp.players.local.model = modelHash;
+    mp.players.local.health = 100;
+    mp.players.local.armour = 0;
+
+    mp.events.call('hideDeathScreen');
+
+    mp.gui.chat.push('[CLIENT] onPlayerRespawn завершен!');
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
