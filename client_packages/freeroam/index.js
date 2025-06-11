@@ -10,6 +10,7 @@ const playerHUD = require('./freeroam/playerHUD.js');
 const ballSystem = require('./freeroam/ballSystem.js');
 const vehicleSpawner = require('./freeroam/vehicleSpawner.js');
 const smartphone = require('./freeroam/smartphone.js');
+const planeSpawner = require('./freeroam/planeSpawner.js');  // ← новое подключение
 
 
 // Изменение обработчика события playerReady
