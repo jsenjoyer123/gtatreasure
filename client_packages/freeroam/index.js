@@ -4,46 +4,12 @@ let authBrowserLoaded = false;
 
 let smartphoneBrowser = null;
 
-// const path = require('path');
-// const authBrowserPath = path.resolve(__dirname, 'authBrowser.js');
-// mp.gui.chat.push(`Текущая директория: ${mp.game.system.getCurrentDirectory()}`);
 const authBrowser = require('./freeroam/authBrowser.js');
 const womenFollowers = require('./freeroam/womenFollowers.js');
 const playerHUD = require('./freeroam/playerHUD.js');
 const ballSystem = require('./freeroam/ballSystem.js');
 const vehicleSpawner = require('./freeroam/vehicleSpawner.js');
 const smartphone = require('./freeroam/smartphone.js');
-
-// В начале скрипта определим функцию для открытия окна регистрации
-// function openAuthBrowser() {
-//     if (!authBrowserLoaded) {
-//         // Уничтожаем существующий браузер если он есть
-//         if (smartphoneBrowser) {
-//             smartphoneBrowser.destroy();
-//             smartphoneBrowser = null;
-//         }
-//
-//         // Создаем браузер ДО установки фокуса
-//         smartphoneBrowser = mp.browsers.new('localhost:5173/register');
-//         const playerId = mp.players.local.remoteId;
-//
-//         // Ждем готовности браузера
-//         smartphoneBrowser.execute(`
-//             window.ragePlayerId = ${playerId};
-//             document.addEventListener('DOMContentLoaded', () => {
-//                 mp.invoke('focus', true);
-//             });
-//         `);
-//
-//         // Настройки интерфейса ПОСЛЕ создания браузера
-//         mp.gui.cursor.show(true, true);
-//         mp.game.ui.displayRadar(false);
-//         mp.game.ui.displayHud(false);
-//         mp.gui.chat.activate(false);
-//
-//         authBrowserLoaded = true;
-//     }
-// }
 
 
 // Изменение обработчика события playerReady
@@ -721,16 +687,16 @@ mp.events.add('playEatAnimation', async () => {
 
 
 
-function openSmartphone() {
-    if (!smartphoneBrowser) {
-        smartphoneBrowser = mp.browsers.new('localhost:5173');
-
-        // Передаем ID игрока в браузер при открытии
-        const playerId = mp.players.local.remoteId;
-        smartphoneBrowser.execute(`window.ragePlayerId = ${playerId};`);
-    }
-    mp.gui.cursor.visible = true;
-}
+// function openSmartphone() {
+//     if (!smartphoneBrowser) {
+//         smartphoneBrowser = mp.browsers.new('localhost:5173');
+//
+//         // Передаем ID игрока в браузер при открытии
+//         const playerId = mp.players.local.remoteId;
+//         smartphoneBrowser.execute(`window.ragePlayerId = ${playerId};`);
+//     }
+//     mp.gui.cursor.visible = true;
+// }
 
 
 function closeSmartphone() {
@@ -785,9 +751,9 @@ mp.events.add('closeAuthBrowser', (isLoggedIn) => {
     }
 });
 
-mp.keys.bind(0x4D, true, () => { // M
-    openSmartphone();
-});
+// mp.keys.bind(0x4D, true, () => { // M
+//     openSmartphone();
+// });
 
 // Обновляем обработчик Backspace, чтобы не закрывать окно авторизации,
 // если пользователь еще не вошел
@@ -877,7 +843,6 @@ mp.events.add('doScrenshot', () => {
 
 
 
-// // Пример: функция для включения эффекта опьянения
 // function enableDrunkEffect(duration = 30000) { // duration в мс, по умолчанию 30 секунд
 //     // Анимация походки: сперва запрашиваем клипсет движения "drunk"
 //     const animSet = "move_m@drunk@verydrunk";
@@ -911,11 +876,10 @@ mp.events.add('doScrenshot', () => {
 // }
 
 
-//     enableDrunkEffect(30000); // эффект на 30 секунд
 
 
-// Функция для включения визуальных эффектов опьянения
-// В клиентской части RAGE MP добавьте следующий код:
+
+
 
 
 
@@ -978,3 +942,14 @@ mp.events.add('registerSuccess', () => {
 //     // Включи интерфейс, убери смерть, проиграй звук и т.п.
 //     // Например: hideDeathScreen();
 // });
+
+mp.events.add('authSuccess', () => {
+    // 1. Закрываем браузер авторизации
+    authBrowser.closeAuthBrowser();
+
+    // 2. Снимаем флаг "авторизация", чтобы телефон можно было открыть вручную
+    smartphone.setAuthBrowserLoaded(false);
+
+    // 3. Сообщаем игроку, что он вошел
+    mp.gui.chat.push('Вы успешно авторизовались! Нажмите ~g~M~s~, чтобы открыть телефон.');
+});

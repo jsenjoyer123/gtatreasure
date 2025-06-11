@@ -85,8 +85,14 @@ export default {
         localStorage.setItem('user', JSON.stringify(data.user));
         
         // Перенаправление
-        this.$router.push('/');
-        
+        // this.$router.push('/');
+        if (typeof mp !== 'undefined') {
+          mp.trigger('authSuccess');
+        }
+
+
+
+
       } catch (error) {
         this.errorMessage = error.message || 'Ошибка при авторизации';
       } finally {
