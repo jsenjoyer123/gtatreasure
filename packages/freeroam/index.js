@@ -27,14 +27,72 @@ const ORDER_SPAWN_POSITIONS = [
 
 // Инициализация данных игрока при входе
 mp.events.add('playerJoin', (player) => {
+    // Устанавливаем начальный баланс (будет обновлен после авторизации)
+    const initialBalance = 1000; // Минимальный начальный баланс
+
     playerBalls.set(player.id, {
         inventory: 5,
-        count: 0 // Начинаем с 0 собранных мячей
+        count: 0, // Начинаем с 0 собранных мячей
+        balance: initialBalance, // Начальный баланс до авторизации
+        authenticated: false // Флаг авторизации
     });
     console.log(`[BALL SYSTEM] Инициализированы данные для игрока ${player.name} (ID: ${player.id})`);
+    console.log(`[BALANCE] Игроку ${player.name} установлен начальный баланс: ${initialBalance}`);
 
     // Отправляем начальные данные клиенту
     player.call('updateInventory', [5, 0]);
+    // Отправляем информацию о балансе клиенту
+    player.call('updateBalance', [initialBalance]);
+});
+
+// Функция для генерации детерминированного баланса на основе имени пользователя
+function generateBalanceFromUsername(username) {
+    // Простая хеш-функция для преобразования строки в число
+    let hash = 0;
+    for (let i = 0; i < username.length; i++) {
+        hash = ((hash << 5) - hash) + username.charCodeAt(i);
+        hash = hash & hash; // Преобразуем в 32-битное целое
+    }
+
+    // Используем абсолютное значение хеша для генерации баланса
+    // в диапазоне от 1000 до 10000
+    const absHash = Math.abs(hash);
+    const balance = 1000 + (absHash % 9001); // 1000 + (0 до 9000)
+
+    return balance;
+}
+
+// Обработчик события авторизации игрока
+mp.events.add('playerAuthenticated', (player, username) => {
+    // Проверяем, есть ли данные игрока
+    const playerData = playerBalls.get(player.id);
+    if (!playerData) {
+        console.log(`[AUTH] Ошибка: нет данных для игрока ${player.name} (ID: ${player.id})`);
+        return;
+    }
+
+    // Генерируем баланс на основе имени пользователя
+    const newBalance = generateBalanceFromUsername(username);
+
+    // Обновляем данные игрока
+    playerData.balance = newBalance;
+    playerData.authenticated = true;
+    playerData.username = username; // Сохраняем имя пользователя
+    playerBalls.set(player.id, playerData);
+
+    console.log(`[AUTH] Игрок ${player.name} авторизован как ${username}`);
+    console.log(`[BALANCE] Установлен баланс ${newBalance} на основе имени пользователя`);
+
+    // Отправляем обновленный баланс клиенту
+    player.call('updateBalance', [newBalance]);
+    player.outputChatBox(`Ваш баланс обновлен: ${newBalance.toLocaleString()} ₽`);
+
+    // Выводим информацию для тестирования
+    console.log(`[TEST] Примеры балансов для разных пользователей:`);
+    console.log(`[TEST] testuser: ${generateBalanceFromUsername('testuser')}`);
+    console.log(`[TEST] admin: ${generateBalanceFromUsername('admin')}`);
+    console.log(`[TEST] player1: ${generateBalanceFromUsername('player1')}`);
+    console.log(`[TEST] ${username}: ${newBalance}`);
 });
 
 // Удаление данных при отключении
@@ -398,21 +456,47 @@ mp.events.addCommand('ballstats', (player) => {
     const playerData = playerBalls.get(player.id);
     if (playerData) {
         player.outputChatBox(`Статистика мячей: Инвентарь=${playerData.inventory}, Собрано=${playerData.count}`);
-        console.log(`[BALL SYSTEM] Статистика ${player.name}: инвентарь=${playerData.inventory}, собрано=${playerData.count}`);
+        player.outputChatBox(`Баланс: ${playerData.balance.toLocaleString()} ₽`);
+        if (playerData.username) {
+            player.outputChatBox(`Авторизован как: ${playerData.username}`);
+        }
+        console.log(`[BALL SYSTEM] Статистика ${player.name}: инвентарь=${playerData.inventory}, собрано=${playerData.count}, баланс=${playerData.balance}`);
     } else {
         player.outputChatBox('Данные о мячах не найдены!');
     }
 });
 
+// Команда для проверки генерации баланса
+mp.events.addCommand('checkbalance', (player, fullTextds, username) => {
+    if (!username) {
+        player.outputChatBox('Использование: /checkbalance [username]');
+        return;
+    }
+
+    const balance = generateBalanceFromUsername(username);
+    player.outputChatBox(`Баланс для пользователя "${username}": ${balance.toLocaleString()} ₽`);
+    console.log(`[TEST] Проверка баланса для "${username}": ${balance}`);
+});
+
 // Команда для сброса статистики мячей
 mp.events.addCommand('resetballs', (player) => {
+    const playerData = playerBalls.get(player.id);
+    const currentBalance = playerData ? playerData.balance : 1000;
+    const isAuthenticated = playerData ? playerData.authenticated : false;
+    const username = playerData ? playerData.username : null;
+
     playerBalls.set(player.id, {
         inventory: 5,
-        count: 0
+        count: 0,
+        balance: currentBalance, // Сохраняем текущий баланс
+        authenticated: isAuthenticated, // Сохраняем статус авторизации
+        username: username // Сохраняем имя пользователя
     });
+
     player.call('updateInventory', [5, 0]);
     player.outputChatBox('Статистика мячей сброшена!');
-    console.log(`[BALL SYSTEM] Сброшена статистика для игрока ${player.name}`);
+    player.outputChatBox(`Баланс сохранен: ${currentBalance.toLocaleString()} ₽`);
+    console.log(`[BALL SYSTEM] Сброшена статистика для игрока ${player.name}, баланс сохранен: ${currentBalance}`);
 });
 
 // Команда для отладки коллайдеров

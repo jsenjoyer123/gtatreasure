@@ -228,7 +228,7 @@ mp.events.add('userAlreadyLoggedIn', (userData) => {
 //   }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  
+
 
 
 
@@ -626,7 +626,7 @@ function enableDrunkVisuals(duration = 30000) {
 
     // Устанавливаем модификатор тайм-цикла
     mp.game.graphics.setTimecycleModifier(visualModifier);
-    
+
     // Можно задать интенсивность эффекта (от 0.0 до 1.0, где 1.0 – максимальная сила)
     mp.game.graphics.setTimecycleModifierStrength(0.8);
 
@@ -651,11 +651,11 @@ mp.events.add('clientCollectBall', async (ballId) => {
     // Анимация сбора
     const animDict = 'pickup_object';
     mp.game.streaming.requestAnimDict(animDict);
-    
+
     while (!mp.game.streaming.hasAnimDictLoaded(animDict)) {
         await mp.game.waitAsync(100);
     }
-    
+
     mp.players.local.taskPlayAnim(
         animDict, 
         'putdown_low', 
@@ -684,11 +684,11 @@ mp.events.add('clientCollectBall', async (ballId) => {
 mp.events.add('playEatAnimation', async () => {
     const animDict = 'mp_suicide';
     mp.game.streaming.requestAnimDict(animDict);
-    
+
     while (!mp.game.streaming.hasAnimDictLoaded(animDict)) {
         await mp.game.waitAsync(100);
     }
-    
+
     mp.players.local.taskPlayAnim(
         animDict, 
         'pill', 
@@ -891,13 +891,13 @@ mp.events.add('doScrenshot', () => {
 //         const safePage = Math.max(0, Math.min(page, Math.floor(allModels.length / 10)));
 //         const start = safePage * 10;
 //         const end = start + 10;
-        
+
 //         mp.gui.chat.push(`=== Page ${safePage} ===`);
-        
+
 //         allModels.slice(start, end).forEach((model, index) => {
 //             mp.gui.chat.push(`${start + index + 1}. ${model}`);
 //         });
-        
+
 //         currentPage = safePage;
 //     } catch(e) {
 //         console.error("Ошибка:", e);
@@ -957,6 +957,11 @@ mp.events.add('loginSuccess', (userData) => {
             localStorage.setItem('user', JSON.stringify(${JSON.stringify(userData)}));
             if (window.onLoginSuccess) window.onLoginSuccess();
         `);
+
+        // Отправляем данные пользователя на сервер для генерации баланса
+        if (userData && userData.username) {
+            mp.events.callRemote('playerAuthenticated', userData.username);
+        }
 
         setTimeout(() => {
             authBrowser.closeAuthBrowser();
