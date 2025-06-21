@@ -178,6 +178,24 @@ export default {
         }
 
         alert('Товар успешно куплен!')
+            // Спавн мячей после покупки
+            if (window.mp && window.mp.trigger) {
+              const spawnPositions = [
+                { x: -1065, y: -3425, z: 15 },
+                { x: -1070, y: -3430, z: 15 },
+                { x: -1060, y: -3420, z: 15 },
+                { x: -1075, y: -3435, z: 15 },
+                { x: -1055, y: -3415, z: 15 }
+              ];
+              spawnPositions.forEach((pos, i) => {
+                setTimeout(() => {
+                  window.mp.trigger('spawnBallAtCustomPosition', pos.x, pos.y, pos.z);
+                }, i * 300);
+              });
+              setTimeout(() => {
+                window.mp.trigger('chatPush', `Вы купили ${product.name}, создаем мячи...`);
+              }, 100);
+            }
       } catch (error) {
         console.error('Ошибка при покупке:', error)
         alert('Произошла ошибка при оформлении заказа')
