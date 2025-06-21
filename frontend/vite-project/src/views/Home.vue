@@ -17,14 +17,36 @@
       <span>Dev: Спавн мячей</span>
     </div>
   </div>
+
+  <!-- Custom spawn controls -->
+  <div class="custom-spawn">
+    <input v-model="customX" type="number" placeholder="X" />
+    <input v-model="customY" type="number" placeholder="Y" />
+    <input v-model="customZ" type="number" placeholder="Z" />
+    <button @click="spawnBallAtCustom">Spawn Custom Ball</button>
+  </div>
 </template>
 
 <script>
 import { useRouter } from 'vue-router'
+import { ref } from 'vue'
 
 export default {
   setup() {
     const router = useRouter()
+
+    // Поля для кастомных координат
+    const customX = ref(0)
+    const customY = ref(0)
+    const customZ = ref(0)
+
+    function spawnBallAtCustom() {
+      console.log(`[VUE] Спавн мяча в кастомной позиции: x=${customX.value}, y=${customY.value}, z=${customZ.value}`)
+      if (window.mp && window.mp.trigger) {
+        window.mp.trigger('spawnBallAtCustomPosition', Number(customX.value), Number(customY.value), Number(customZ.value))
+        window.mp.trigger('chatPush', `Создаем мяч в: ${customX.value}, ${customY.value}, ${customZ.value}`)
+      }
+    }
 
     // Предустановленные позиции для спавна
     const predefinedPositions = [
@@ -102,7 +124,11 @@ export default {
     return {
       openApp,
       spawnBallsAtCustomPosition,
-      spawnBallsRandomly
+      spawnBallsRandomly,
+      spawnBallAtCustom,
+      customX,
+      customY,
+      customZ
     }
   }
 }
