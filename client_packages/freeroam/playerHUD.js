@@ -7,7 +7,7 @@ let playerData = {
 
 exports.initHUD = () => {
     // Обновление данных при получении с сервера
-    mp.events.add('updateUI', (inventory, count) => {
+    mp.events.add('updateInventory', (inventory, count) => {
         playerData.inventory = inventory;
         playerData.count = count;
     });
@@ -62,7 +62,7 @@ exports.initHUD = () => {
 
         // Скорость, мячи и баланс (показываем нативный баланс)
         mp.game.graphics.drawText(
-            `Скорость: ${speed} км/ч | Мячи: ${playerData.count} | Баланс: ${nativeBalance.toLocaleString()} ₽`,
+            `Скорость: ${speed} км/ч | Мячи: ${playerData.inventory} | Баланс: ${nativeBalance.toLocaleString()} ₽`,
             [0.5, 0.03],
             {
                 font: 4,

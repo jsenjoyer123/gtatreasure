@@ -14,7 +14,8 @@ async function loadModel(modelHash, timeoutMs = 5000) {
 
 exports.spawnCarNearby = async () => {
     try {
-        const modelName = 'tezeract';
+        const modelName = 'cheburek'
+        // const modelName = 'tezeract';
         const modelHash = mp.game.joaat(modelName);
         await loadModel(modelHash);
 

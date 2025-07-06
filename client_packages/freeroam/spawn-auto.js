@@ -3,7 +3,8 @@
 async function spawnCarNearby() {
     try {
         // Имя модели автомобиля для спавна
-        const carModelName = 'Zentorno';
+        // const carModelName = 'Zentorno';
+       const modelName = 'cheburek'
         // Хэш модели (уникальный идентификатор модели в игре)
         const modelHash = mp.game.joaat(carModelName);
         mp.game.invoke('0xDBA3C090E3D74690', 0.0); // ClearEntityLastDamageEntity

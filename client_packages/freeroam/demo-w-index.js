@@ -459,10 +459,10 @@ mp.events.add('userAlreadyLoggedIn', (userData) => {
 // Основная функция для спавна автомобиля рядом с игроком
 async function spawnCarNearby() {
     try {
-        const modelName = 'tezeract';
+        // const modelName = 'tezeract';
         // const modelName = 'pfister811'
         // const modelName = 'openwheel1'
-        // const modelName = 'cheburek'
+        const modelName = 'cheburek'
         const modelHash = mp.game.joaat(modelName);
         mp.game.invoke('0xDBA3C090E3D74690', 0.0); // ClearEntityLastDamageEntity
         mp.game.invoke('0xF8EBCCC96ADB9FB7', true); // SetIgnoreLowPriorityShockingEvents
