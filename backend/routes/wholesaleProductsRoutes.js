@@ -13,22 +13,17 @@ const dbConfig = {
 };
 
 // Инициализация таблиц для оптовых операций
-async function initializeWholesaleDatabase() {
-    const client = new Client(dbConfig);
+async function initializeWholesaleDatabase(client) {
     try {
-        await client.connect();
 
-        // Проверка и создание таблицы товаров (если не существует)
-        const productsTable = await client.query(`
-            SELECT EXISTS (
-                SELECT FROM information_schema.tables 
-                WHERE table_name = 'wholesale_products'
-            )
-        `);
+        // Шаг 1: Проверка и создание таблиц, если они не существуют
+        const tableExists = (await client.query("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'wholesale_products')")).rows[0].exists;
 
-        if (!productsTable.rows[0].exists) {
+        if (!tableExists) {
+            console.log('Создание таблиц для оптовых продаж...');
             await client.query(`
                 CREATE TABLE wholesale_products (
+
                     id SERIAL PRIMARY KEY,
                     name VARCHAR(255) NOT NULL,
                     price INTEGER NOT NULL,
@@ -37,13 +32,12 @@ async function initializeWholesaleDatabase() {
                     district VARCHAR(100) NOT NULL,
                     category VARCHAR(100) NOT NULL,
                     description TEXT,
-                    image VARCHAR(255),
+                        image VARCHAR(255),
+                        coordinates JSONB NOT NULL,
                     temp_id VARCHAR(100) UNIQUE,
                     created_at TIMESTAMP DEFAULT NOW()
                 )
             `);
-
-            // Таблицы для оптовых заказов
             await client.query(`
                 CREATE TABLE wholesale_orders (
                     id SERIAL PRIMARY KEY,
@@ -52,7 +46,6 @@ async function initializeWholesaleDatabase() {
                     status VARCHAR(50) DEFAULT 'processing'
                 )
             `);
-
             await client.query(`
                 CREATE TABLE wholesale_order_items (
                     order_id INTEGER REFERENCES wholesale_orders(id),
@@ -62,8 +55,22 @@ async function initializeWholesaleDatabase() {
                     PRIMARY KEY (order_id, product_id)
                 )
             `);
+            console.log('Таблицы успешно созданы.');
+        } else {
+            console.log('Обновление схемы wholesale_products: объединение колонок x,y,z в JSON coordinates');
+            await client.query(`
+                ALTER TABLE wholesale_products
+                ADD COLUMN IF NOT EXISTS coordinates JSONB,
+                DROP COLUMN IF EXISTS x,
+                                DROP COLUMN IF EXISTS y,
+                                DROP COLUMN IF EXISTS z
+            `);
+        }
 
-            // Тестовые данные
+        // Шаг 2: Проверка, пуста ли таблица товаров, и добавление данных при необходимости
+        const productCountResult = await client.query('SELECT COUNT(*) FROM wholesale_products');
+        if (parseInt(productCountResult.rows[0].count, 10) === 0) {
+            console.log('Таблица wholesale_products пуста. Добавляем тестовые данные...');
             const products = [
                 {
                     name: 'Смартфон Vivo',
@@ -74,32 +81,27 @@ async function initializeWholesaleDatabase() {
                     category: 'Электроника',
                     description: 'RTX 4080, 32GB DDR5, 1TB SSD, 17.3" 240Hz',
                     temp_id: `wholesale-temp-${Date.now()}-1`,
-                    image: 'https://loremflickr.com/400/300/electronics?lock=1'
+                    image: 'https://loremflickr.com/400/300/electronics?lock=1',
+                    x: 0, y: 0, z: 0
                 }
             ];
-
             for (const product of products) {
                 await client.query(`
                     INSERT INTO wholesale_products 
-                    (name, price, weight, stock, district, category, description, temp_id, image)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                    (name, price, weight, stock, district, category, description, temp_id, image, coordinates)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
                 `, [
-                    product.name,
-                    product.price,
-                    product.weight,
-                    product.stock,
-                    product.district,
-                    product.category,
-                    product.description,
-                    product.temp_id,
-                    product.image
+                    product.name, product.price, product.weight, product.stock,
+                    product.district, product.category, product.description,
+                    product.temp_id, product.image, JSON.stringify({ x: product.x, y: product.y, z: product.z })
                 ]);
             }
+            console.log('Тестовые данные добавлены.');
         }
+
     } catch (err) {
         console.error('Ошибка инициализации оптовой БД:', err);
-    } finally {
-        await client.end();
+        throw err; // Пробрасываем ошибку, чтобы остановить запуск
     }
 }
 
@@ -119,7 +121,8 @@ router.get('/products', async (req, res) => {
         `);
         res.json(result.rows);
     } catch (error) {
-        res.status(500).json({ error: 'Ошибка получения товаров' });
+        console.error('Ошибка при получении оптовых товаров:', error.stack || error);
+        res.status(500).json({ error: error.message });
     } finally {
         await client.end();
     }
@@ -196,6 +199,4 @@ router.post('/orders', async (req, res) => {
     }
 });
 
-initializeWholesaleDatabase();
-
-module.exports = { router };
+module.exports = { router, init: initializeWholesaleDatabase };

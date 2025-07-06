@@ -110,7 +110,7 @@ export default {
     async loadProducts() {
       try {
         // 1. Используем абсолютный URL для исключения проблем с относительными путями
-        const baseUrl = import.meta.env.VITE_API_BASE_URL;
+        const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
         const response = await fetch(`${baseUrl}/api/wholesale/products`);
         // 2. Добавляем явное указание ожидаемого Content-Type
         const contentType = response.headers.get('content-type');
@@ -133,7 +133,8 @@ export default {
         // 5. Проверяем преобразование данных
         this.products = serverProducts.map(product => ({
           // Важно: названия полей должны точно совпадать с ответом сервера
-          name: product.name,
+          id: product.id,
+              name: product.name,
           price: product.price,
           weight: product.weight,
           stock: product.stock,

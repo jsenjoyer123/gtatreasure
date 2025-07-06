@@ -1,4 +1,3 @@
-
 const express = require('express');
 const { Client } = require('pg');
 const bcrypt = require('bcrypt');
@@ -36,45 +35,14 @@ const dbConfig = {
 };
 
 // Проверка подключения к БД при запуске
-async function initializeDatabase() {
-    const client = new Client(dbConfig);
+async function initializeDatabase(client) {
     try {
-        await client.connect();
-        console.log('✅ PostgreSQL подключен');
 
-        // Проверяем существование таблицы users
         const tableCheck = await client.query(`
-            SELECT EXISTS (
-                SELECT FROM information_schema.tables
-                WHERE table_name = 'users'
-            )
+            SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'users')
         `);
 
-        if (tableCheck.rows[0].exists) {
-            // Проверяем структуру таблицы
-            const columnCheck = await client.query(`
-                SELECT column_name 
-                FROM information_schema.columns 
-                WHERE table_name = 'users' AND column_name = 'username'
-            `);
-
-            if (columnCheck.rows.length === 0) {
-                console.log('🔄 Обнаружена старая структура таблицы users. Пересоздаем...');
-                // Удаляем старую таблицу
-                await client.query('DROP TABLE IF EXISTS users');
-                console.log('🗑️ Старая таблица users удалена');
-            }
-        }
-
-        // Проверяем снова, нужно ли создать таблицу
-        const tableCheckAgain = await client.query(`
-            SELECT EXISTS (
-                SELECT FROM information_schema.tables
-                WHERE table_name = 'users'
-            )
-        `);
-
-        if (!tableCheckAgain.rows[0].exists) {
+        if (!tableCheck.rows[0].exists) {
             console.log('🔄 Создаем таблицу users...');
             await client.query(`
                 CREATE TABLE users (
@@ -86,7 +54,6 @@ async function initializeDatabase() {
             `);
             console.log('✅ Таблица users создана');
 
-            // Добавляем тестового пользователя
             const saltRounds = 10;
             const passwordHash = await bcrypt.hash('password', saltRounds);
             await client.query(
@@ -95,12 +62,9 @@ async function initializeDatabase() {
             );
             console.log('✅ Тестовый пользователь создан');
         }
-
     } catch (err) {
-        console.error('❌ Ошибка инициализации БД:', err);
-        process.exit(1);
-    } finally {
-        await client.end();
+        console.error('❌ Ошибка инициализации БД (users):', err);
+        throw err; // Пробрасываем ошибку, чтобы остановить запуск
     }
 }
 
@@ -113,44 +77,22 @@ app.use((req, res, next) => {
 // Роут авторизации
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
-
     if (!username || !password) {
         return res.status(400).json({ message: 'Все поля обязательны для заполнения' });
     }
-
     const client = new Client(dbConfig);
-
     try {
         await client.connect();
-
-        // Поиск пользователя по username
-        const result = await client.query(
-            'SELECT id, username, password_hash FROM users WHERE username = $1',
-            [username.toLowerCase().trim()]
-        );
-
+        const result = await client.query('SELECT id, username, password_hash FROM users WHERE username = $1', [username.toLowerCase().trim()]);
         if (result.rows.length === 0) {
             return res.status(401).json({ message: 'Неверные учетные данные' });
         }
-
         const user = result.rows[0];
-
-        // Проверка пароля
         const isMatch = await bcrypt.compare(password, user.password_hash);
-
         if (!isMatch) {
             return res.status(401).json({ message: 'Неверные учетные данные' });
         }
-
-        // Успешный ответ
-        res.json({
-            message: 'Авторизация успешна',
-            user: {
-                id: user.id,
-                username: user.username
-            }
-        });
-
+        res.json({ message: 'Авторизация успешна', user: { id: user.id, username: user.username } });
     } catch (error) {
         console.error('Ошибка авторизации:', error);
         res.status(500).json({ message: 'Внутренняя ошибка сервера' });
@@ -162,51 +104,25 @@ app.post('/api/login', async (req, res) => {
 // Роут регистрации
 app.post('/api/register', async (req, res) => {
     const { username, password } = req.body;
-
-    // Валидация
     if (!username || !password) {
         return res.status(400).json({ message: 'Все поля обязательны' });
     }
-
-    // Валидация username
     if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
-        return res.status(400).json({ message: 'Username должен содержать от 3 до 20 символов (буквы, цифры, подчеркивания)' });
+        return res.status(400).json({ message: 'Username должен содержать от 3 до 20 символов' });
     }
-
     if (password.length < 6) {
         return res.status(400).json({ message: 'Пароль должен быть не менее 6 символов' });
     }
-
     const client = new Client(dbConfig);
-
     try {
         await client.connect();
-
-        // Проверка существующего пользователя
-        const existingUser = await client.query(
-            'SELECT id FROM users WHERE username = $1',
-            [username.toLowerCase().trim()]
-        );
-
+        const existingUser = await client.query('SELECT id FROM users WHERE username = $1', [username.toLowerCase().trim()]);
         if (existingUser.rows.length > 0) {
             return res.status(409).json({ message: 'Пользователь уже существует' });
         }
-
-        // Хеширование пароля
-        const saltRounds = 10;
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-        // Создание пользователя
-        const result = await client.query(
-            'INSERT INTO users(username, password_hash) VALUES($1, $2) RETURNING id, username',
-            [username.toLowerCase().trim(), hashedPassword]
-        );
-
-        res.status(201).json({
-            message: 'Регистрация успешна',
-            user: result.rows[0]
-        });
-
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const result = await client.query('INSERT INTO users(username, password_hash) VALUES($1, $2) RETURNING id, username', [username.toLowerCase().trim(), hashedPassword]);
+        res.status(201).json({ message: 'Регистрация успешна', user: result.rows[0] });
     } catch (error) {
         console.error('Ошибка регистрации:', error);
         res.status(500).json({ message: 'Ошибка сервера' });
@@ -222,8 +138,39 @@ app.use((err, req, res, next) => {
 });
 
 // Запуск сервера
-initializeDatabase().then(() => {
-    app.listen(port, () => {
-        console.log(`🚀 Сервер запущен на порту ${port}`);
-    });
-});
+async function startServer() {
+    const client = new Client(dbConfig);
+    try {
+        await client.connect();
+        console.log('✅ PostgreSQL подключен для инициализации');
+
+        console.log('Шаг 1: Инициализация основной БД (users)...');
+        await initializeDatabase(client);
+        console.log('Шаг 1: Инициализация основной БД (users) завершена.');
+
+        console.log('Шаг 2: Инициализация БД продуктов...');
+        await productsRoutes.initializeProductsDatabase(client);
+        console.log('Шаг 2: Инициализация БД продуктов завершена.');
+
+        console.log('Шаг 3: Инициализация оптовой БД...');
+        await wholesaleProductsRoutes.init(client);
+        console.log('Шаг 3: Инициализация оптовой БД завершена.');
+
+        console.log('✅ Вся инициализация завершена. Запуск сервера...');
+        
+        app.listen(port, () => {
+            console.log(`🚀 Сервер запущен на порту ${port}`);
+        });
+
+    } catch (error) {
+        console.error('❌ Не удалось запустить сервер:', error);
+        process.exit(1);
+    } finally {
+        if (client) {
+            await client.end();
+            console.log('🔌 Соединение с PostgreSQL для инициализации закрыто.');
+        }
+    }
+}
+
+startServer();

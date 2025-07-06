@@ -13,10 +13,10 @@ const dbConfig = {
 };
 
 // Инициализация базы данных для товаров
-async function initializeProductsDatabase() {
-    const client = new Client(dbConfig);
+async function initializeProductsDatabase(client) {
     try {
-        await client.connect();
+        await client.query('DROP TABLE IF EXISTS products CASCADE');
+        console.log('🗑️ Old products table dropped');
 
         // Проверяем существование таблицы products
         const tableCheck = await client.query(`
@@ -30,6 +30,9 @@ async function initializeProductsDatabase() {
             console.log('🔄 Создаем таблицу products...');
             await client.query(`
                 CREATE TABLE products (
+                                          x FLOAT,
+                                          y FLOAT,
+                                          z FLOAT,
                                           id SERIAL PRIMARY KEY,
                                           name VARCHAR(255) NOT NULL,
                                           price INTEGER NOT NULL,
@@ -59,7 +62,10 @@ async function initializeProductsDatabase() {
                 category: 'Электроника',
                 description: 'RTX 4080, 32GB DDR5, 1TB SSD, 17.3" 240Hz',
                 temp_id: `temp-${Date.now()}-1`,
-                image: 'https://loremflickr.com/400/300/electronics?lock=1'
+                image: 'https://loremflickr.com/400/300/electronics?lock=1',
+                 x: 0,
+                 y: 0,
+                 z: 0
             },
             {
                 name: 'Смартфон Oppo',
@@ -69,7 +75,10 @@ async function initializeProductsDatabase() {
                 category: 'Электроника',
                 description: '6.1" OLED, A17 Bionic, 256GB',
                 temp_id: `temp-${Date.now()}-2`,
-                image: 'https://loremflickr.com/400/300/electronics?lock=2'
+                image: 'https://loremflickr.com/400/300/electronics?lock=2',
+                 x: 0,
+                 y: 0,
+                 z: 0
             },
             {
                 name: 'Смартфон Vivo',
@@ -79,14 +88,17 @@ async function initializeProductsDatabase() {
                 category: 'Мебель',
                 description: 'Кожаная обивка, модульная система',
                 temp_id: `temp-${Date.now()}-3`,
-                image: 'https://loremflickr.com/400/300/furniture?lock=1'
+                image: 'https://loremflickr.com/400/300/furniture?lock=1',
+                 x: 0,
+                 y: 0,
+                 z: 0
             }
         ];
 
         for (const product of products) {
             await client.query(`
-                INSERT INTO products (name, price, weight, district, category, description, temp_id, image)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                INSERT INTO products (name, price, weight, district, category, description, temp_id, image, x, y, z)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
             `, [
                 product.name,
                 product.price,
@@ -95,17 +107,20 @@ async function initializeProductsDatabase() {
                 product.category,
                 product.description,
                 product.temp_id,
-                product.image
+                product.image,
+                product.x,
+                product.y,
+                product.z
             ]);
         }
         console.log('✅ Тестовые товары перезаписаны');
 
     } catch (err) {
-        console.error('❌ Ошибка инициализации товаров:', err);
-    } finally {
-        await client.end();
+        console.error('Ошибка инициализации БД (продукты):', err);
+        throw err;
     }
 }
+
 // Получение всех товаров
 router.get('/products', async (req, res) => {
     const client = new Client(dbConfig);
@@ -116,7 +131,7 @@ router.get('/products', async (req, res) => {
         const result = await client.query(`
       SELECT 
         id, name, price, weight, district, category, 
-        description, image, temp_id as "tempId", 
+        description, image, x, y, z, temp_id as "tempId", 
         id as "serverId"
       FROM products
       ORDER BY category, name
@@ -142,7 +157,7 @@ router.get('/products/category/:category', async (req, res) => {
         const result = await client.query(`
       SELECT 
         id, name, price, weight, district, category, 
-        description, image, temp_id as "tempId", 
+        description, image, x, y, z, temp_id as "tempId", 
         id as "serverId"
       FROM products
       WHERE category = $1
@@ -259,9 +274,6 @@ router.get('/purchases/user/:userId', async (req, res) => {
         await client.end();
     }
 });
-
-// Инициализация данных при старте сервера
-initializeProductsDatabase();
 
 module.exports = {
     router,

@@ -8,7 +8,10 @@
       >
         <span class="arrow"></span>
       </button>
-      <div class="tab">{{ currentTabName }}</div>
+      <div class="center-content">
+        <img :src="hydraLogo" alt="Hydra Logo" class="logo" />
+        <div class="logo-text">HYDRA</div>
+      </div>
       <button 
         class="close-button" 
         @click="closeBrowser"
@@ -24,6 +27,7 @@
 <script>
 import { useRouter, useRoute } from 'vue-router'
 import { computed } from 'vue'
+import hydraLogo from '../assets/hydra.png'
 
 export default {
   setup() {
@@ -42,7 +46,7 @@ export default {
       }[route.name] || ''
     })
 
-    return { closeBrowser, goBack, currentTabName }
+    return { closeBrowser, goBack, currentTabName, hydraLogo }
   }
 }
 </script>
@@ -158,5 +162,26 @@ export default {
   flex: 1;
   overflow: auto;
   padding: 20px;
+}
+
+.logo {
+  width: 32px;
+  height: auto;
+}
+
+.center-content {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.logo-text {
+  margin-left: 8px;
+  font-weight: 600;
+  font-size: 20px;
+  color: #0066ff;
 }
 </style>
